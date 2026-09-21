@@ -1,0 +1,23 @@
+/*
+ * Tokens de estilo provisorios.
+ * Dono desta pasta: Lucas Santiago. Os valores finais (cor, fonte, botoes)
+ * entram aqui quando o padrao visual for definido.
+ */
+:root {
+  --color-primary: #2563eb;
+  --color-secondary: #64748b;
+  --color-background: #ffffff;
+  --color-text: #0f172a;
+  --color-error: #dc2626;
+
+  --font-family: system-ui, sans-serif;
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+}
