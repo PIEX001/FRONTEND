@@ -1,0 +1,224 @@
+/*
+ * Protótipo de alta fidelidade (1ª quinzena).
+ * Arquivo isolado, não é usado pela aplicação React.
+ * Os nomes das variáveis seguem src/styles/tokens.css para facilitar a migração.
+ */
+:root {
+  /* Cores tiradas do logo da Casa: marrom, azul claro e amarelo do brilho */
+  --color-primary: #552815;
+  --color-primary-dark: #3f1d0f;
+  --color-secondary: #6e5a4e;
+  --color-background: #faf7f0;
+  --color-surface: #ffffff;
+  --color-border: #e6dccf;
+  --color-text: #2b1a12;
+  --color-azul: #d0edfd;
+
+  --color-ok: #3d7a2e;
+  --color-ok-bg: #e8f2df;
+  --color-pendente: #1f4f6e;
+  --color-alerta: #8a5a00;
+  --color-alerta-bg: #fbf1c7;
+  --color-error: #b3261e;
+  --color-error-bg: #fbe7e5;
+
+  --font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--color-text);
+  background: var(--color-background);
+}
+
+/* Barra superior */
+.topo {
+  background: var(--color-surface);
+  border-bottom: 3px solid var(--color-primary);
+  padding: var(--spacing-sm) var(--spacing-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.topo__marca {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.topo__marca img {
+  height: 40px;
+}
+
+.topo__nome {
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.topo__usuario {
+  font-size: 14px;
+  color: var(--color-secondary);
+  text-align: right;
+}
+
+.conteudo {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--spacing-md);
+}
+
+h1 {
+  font-size: 22px;
+  margin: var(--spacing-sm) 0 var(--spacing-xs);
+}
+
+.subtitulo {
+  margin: 0 0 var(--spacing-md);
+  color: var(--color-secondary);
+  font-size: 15px;
+}
+
+/* Formulário */
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: var(--spacing-xs);
+}
+
+input,
+select {
+  width: 100%;
+  font: inherit;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+input:focus,
+select:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.botao {
+  display: block;
+  width: 100%;
+  font: inherit;
+  font-weight: 600;
+  padding: 14px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.botao:hover {
+  background: var(--color-primary-dark);
+}
+
+/* Etiquetas de situação */
+.situacao {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.situacao--ok {
+  color: var(--color-ok);
+  background: var(--color-ok-bg);
+}
+
+.situacao--pendente {
+  color: var(--color-pendente);
+  background: var(--color-azul);
+}
+
+.situacao--alerta {
+  color: var(--color-alerta);
+  background: var(--color-alerta-bg);
+}
+
+/* Tela de busca */
+.busca {
+  display: grid;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.busca .botao {
+  margin-top: var(--spacing-sm);
+}
+
+.resultado-total {
+  margin: var(--spacing-lg) 0 var(--spacing-sm);
+  font-size: 15px;
+  color: var(--color-secondary);
+}
+
+.lista-familias {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.lista-familias li + li {
+  border-top: 1px solid var(--color-border);
+}
+
+.familia {
+  display: grid;
+  gap: 2px;
+  padding: 12px var(--spacing-md);
+  color: inherit;
+  text-decoration: none;
+}
+
+.familia:hover {
+  background: var(--color-background);
+}
+
+.familia__nome {
+  font-weight: 600;
+}
+
+.familia__dados {
+  font-size: 15px;
+  color: var(--color-secondary);
+}
+
+.familia .situacao {
+  justify-self: start;
+  margin-top: var(--spacing-xs);
+}
