@@ -1,10 +1,4 @@
-/*
- * Protótipo de alta fidelidade (1ª quinzena).
- * Arquivo isolado, não é usado pela aplicação React.
- * Os nomes das variáveis seguem src/styles/tokens.css para facilitar a migração.
- */
 :root {
-  /* Cores tiradas do logo da Casa: marrom, azul claro e amarelo do brilho */
   --color-primary: #552815;
   --color-primary-dark: #3f1d0f;
   --color-secondary: #6e5a4e;
@@ -47,7 +41,6 @@ body {
   background: var(--color-background);
 }
 
-/* Barra superior */
 .topo {
   background: var(--color-surface);
   border-bottom: 3px solid var(--color-primary);
@@ -98,7 +91,6 @@ h1 {
   font-size: 15px;
 }
 
-/* Formulário */
 label {
   display: block;
   font-weight: 600;
@@ -140,7 +132,6 @@ select:focus {
   background: var(--color-primary-dark);
 }
 
-/* Etiquetas de situação */
 .situacao {
   display: inline-block;
   font-size: 14px;
@@ -164,18 +155,31 @@ select:focus {
   background: var(--color-alerta-bg);
 }
 
-/* Tela de busca */
-.busca {
-  display: grid;
-  gap: var(--spacing-sm);
+.cartao {
+  margin-bottom: var(--spacing-md);
   padding: var(--spacing-md);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
 }
 
-.busca .botao {
-  margin-top: var(--spacing-sm);
+.cartao__titulo {
+  margin: 0 0 var(--spacing-sm);
+  font-size: 18px;
+  padding: 0;
+  font-weight: 700;
+}
+
+.nota {
+  margin: var(--spacing-sm) 0 0;
+  font-size: 14px;
+  color: var(--color-secondary);
+}
+
+/* Busca */
+.busca {
+  display: grid;
+  gap: var(--spacing-md);
 }
 
 .resultado-total {
@@ -221,4 +225,180 @@ select:focus {
 .familia .situacao {
   justify-self: start;
   margin-top: var(--spacing-xs);
+}
+
+/* Registro de entrega */
+.voltar {
+  display: inline-block;
+  padding: var(--spacing-sm) 0;
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.dados {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 6px var(--spacing-sm);
+  margin: 0;
+}
+
+.dados dt {
+  color: var(--color-secondary);
+}
+
+.dados dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.opcoes {
+  display: grid;
+  gap: var(--spacing-sm);
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.opcao {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.opcao input {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--color-primary);
+}
+
+.opcao:has(input:checked) {
+  border-color: var(--color-primary);
+  background: var(--color-background);
+}
+
+.opcao__parentesco {
+  display: block;
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--color-secondary);
+}
+
+/* Avisos e histórico */
+.aviso {
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-left: 6px solid;
+  border-radius: var(--radius-md);
+}
+
+.aviso--ok {
+  border-color: var(--color-ok);
+  background: var(--color-ok-bg);
+}
+
+.aviso--bloqueio {
+  border-color: var(--color-alerta);
+  background: var(--color-alerta-bg);
+}
+
+.aviso__titulo {
+  margin: 0 0 var(--spacing-sm);
+  font-size: 20px;
+}
+
+.aviso .dados dt {
+  color: var(--color-text);
+}
+
+.historico {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.historico li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) 0;
+  font-size: 15px;
+}
+
+.historico li + li {
+  border-top: 1px solid var(--color-border);
+}
+
+.historico span:last-child {
+  color: var(--color-secondary);
+  text-align: right;
+}
+
+.botao--secundario {
+  margin-top: var(--spacing-sm);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+}
+
+.botao--secundario:hover {
+  background: var(--color-background);
+}
+
+@media (min-width: 900px) {
+  .topo {
+    padding: var(--spacing-sm) var(--spacing-xl);
+  }
+
+  .topo__nome {
+    font-size: 17px;
+  }
+
+  .topo__nome br {
+    display: none;
+  }
+
+  .conteudo {
+    max-width: 1040px;
+    padding: var(--spacing-lg) var(--spacing-xl);
+  }
+
+  h1 {
+    font-size: 26px;
+  }
+
+  .busca {
+    grid-template-columns: 2fr 1fr 160px;
+    align-items: end;
+  }
+
+  .familia {
+    grid-template-columns: 1fr auto;
+    column-gap: var(--spacing-md);
+    padding: 14px var(--spacing-lg);
+  }
+
+  .familia .situacao {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    margin: 0;
+  }
+
+  .entrega {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+    align-items: start;
+  }
+
+  .conteudo--estreito {
+    max-width: 640px;
+  }
 }

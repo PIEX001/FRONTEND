@@ -10,7 +10,7 @@
   <header class="topo">
     <div class="topo__marca">
       <img src="logo.png" alt="">
-      <span class="topo__nome">Casa São Francisco<br>de Assis</span>
+      <span class="topo__nome">Casa São Francisco <br>de Assis</span>
     </div>
     <span class="topo__usuario">Maria (operadora)</span>
   </header>
@@ -19,19 +19,21 @@
     <h1>Entrega de cestas</h1>
     <p class="subtitulo">Setembro de 2026 &middot; 143 de 212 famílias já receberam</p>
 
-    <form class="busca" action="#">
-      <label for="termo">Buscar família</label>
-      <input id="termo" type="search" value="silva" placeholder="Nome, telefone ou código">
-
-      <label for="turma">Turma</label>
-      <select id="turma">
-        <option>Todas as turmas</option>
-        <option>Turma 1 (terça, manhã)</option>
-        <option>Turma 2 (terça, tarde)</option>
-        <option>Turma 3 (quinta, manhã)</option>
-        <option>Turma venezuelana</option>
-      </select>
-
+    <form class="busca cartao" action="#">
+      <div>
+        <label for="termo">Buscar família</label>
+        <input id="termo" type="search" value="silva" placeholder="Nome, telefone ou código">
+      </div>
+      <div>
+        <label for="turma">Turma</label>
+        <select id="turma">
+          <option>Todas as turmas</option>
+          <option>Turma 1</option>
+          <option>Turma 2</option>
+          <option>Turma 3</option>
+          <option>Famílias venezuelanas</option>
+        </select>
+      </div>
       <button class="botao" type="submit">Buscar</button>
     </form>
 
