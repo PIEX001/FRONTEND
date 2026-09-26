@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buscando | Casa de São Francisco de Assis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="topo__marca">
+      <img src="logo.png" alt="">
+      <span class="topo__nome">Casa São Francisco <br>de Assis</span>
+    </div>
+    <span class="topo__usuario">Maria<span class="so-desktop"> (operadora)</span></span>
+  </header>
+
+  <main class="conteudo">
+    <h1>Entrega de cestas</h1>
+    <p class="subtitulo">Setembro de 2026 &middot; 143 de 212 famílias já receberam</p>
+    <div class="progresso"><span style="width: 67%"></span></div>
+
+    <div class="campo-busca">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input type="search" value="silva" placeholder="Nome, telefone ou código" aria-label="Buscar família">
+    </div>
+
+    <div class="resultado-topo">
+      <p class="resultado-total carregando">Buscando...</p>
+      <select class="filtro" aria-label="Turma">
+        <option>Todas as turmas</option>
+        <option>Turma 1</option>
+        <option>Turma 2</option>
+        <option>Turma 3</option>
+        <option>Venezuelanas</option>
+      </select>
+    </div>
+
+    <ul class="lista-familias" aria-hidden="true">
+      <li class="esqueleto"><span></span><span></span></li>
+      <li class="esqueleto"><span></span><span></span></li>
+      <li class="esqueleto"><span></span><span></span></li>
+    </ul>
+    <p class="nota nota--centro">Se o sistema ficou um tempo sem uso, a primeira busca pode levar até 1 minuto.</p>
+  </main>
+</body>
+</html>

@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cesta já entregue | Casa de São Francisco de Assis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&display=swap">
   <link rel="stylesheet" href="estilo.css">
 </head>
 <body>
@@ -12,14 +14,15 @@
       <img src="logo.png" alt="">
       <span class="topo__nome">Casa São Francisco <br>de Assis</span>
     </div>
-    <span class="topo__usuario">Maria (operadora)</span>
+    <span class="topo__usuario">Maria<span class="so-desktop"> (operadora)</span></span>
   </header>
 
   <main class="conteudo conteudo--estreito">
-    <a class="voltar" href="busca.html">&larr; Voltar para a busca</a>
-
     <section class="aviso aviso--bloqueio">
-      <h1 class="aviso__titulo">Esta família já recebeu a cesta de setembro</h1>
+      <div class="aviso__cabecalho">
+        <span class="aviso__icone"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5"/><path d="M12 16.2v.3"/></svg></span>
+        <h1 class="aviso__titulo">Esta família já recebeu a cesta de setembro</h1>
+      </div>
       <dl class="dados">
         <dt>Retirou</dt>
         <dd>Ana Paula Moreira (esposa)</dd>
@@ -52,7 +55,7 @@
       </ul>
     </section>
 
-    <a class="botao" href="busca.html">Voltar para a busca</a>
+    <a class="botao" href="busca.html">Buscar outra família</a>
   </main>
 </body>
 </html>
