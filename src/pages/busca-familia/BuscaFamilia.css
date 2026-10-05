@@ -1,0 +1,11 @@
+/* Topo da lista: total e filtros quebram linha no celular. */
+.busca__topo {
+  flex-wrap: wrap;
+}
+
+.busca__filtros {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}

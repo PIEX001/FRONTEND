@@ -1,0 +1,1 @@
+export { Vazio } from "./Vazio";
