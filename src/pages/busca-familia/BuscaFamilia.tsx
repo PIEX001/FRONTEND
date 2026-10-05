@@ -6,6 +6,7 @@ import { Carregando } from "../../components/base/Carregando";
 import { Situacao } from "../../components/base/Situacao";
 import { buscarResumoMes } from "../../services/entregaService";
 import { buscarFamilias } from "../../services/familiaService";
+import { listarTurmas } from "../../services/turmaService";
 import type { ResumoEntregasMes } from "../../types/entrega";
 import type { FamiliaResumo } from "../../types/familia";
 
@@ -36,11 +37,18 @@ export function BuscaFamilia() {
   const [familias, setFamilias] = useState<FamiliaResumo[]>([]);
   const [carregando, setCarregando] = useState(false);
   const [resumo, setResumo] = useState<ResumoEntregasMes | null>(null);
+  const [turmas, setTurmas] = useState<string[]>([]);
+  const [turmaSelecionada, setTurmaSelecionada] = useState(""); // "" = todas
   const buscou = termo.trim() !== "";
 
   useEffect(() => {
     buscarResumoMes().then(setResumo);
+    listarTurmas().then(setTurmas);
   }, []);
+
+  const familiasVisiveis = turmaSelecionada
+    ? familias.filter((familia) => familia.turma === turmaSelecionada)
+    : familias;
 
   const porcentagem =
     resumo && resumo.totalFamilias > 0
@@ -105,12 +113,27 @@ export function BuscaFamilia() {
           <>
             <div className="resultado-topo">
               <p className="resultado-total">
-                {familias.length === 1 ? "1 família" : `${familias.length} famílias`}
+                {familiasVisiveis.length === 1
+                  ? "1 família"
+                  : `${familiasVisiveis.length} famílias`}
               </p>
+              <select
+                className="filtro"
+                aria-label="Turma"
+                value={turmaSelecionada}
+                onChange={(e) => setTurmaSelecionada(e.target.value)}
+              >
+                <option value="">Todas as turmas</option>
+                {turmas.map((turma) => (
+                  <option key={turma} value={turma}>
+                    {turma}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <ul className="lista-familias">
-              {familias.map((familia) => {
+              {familiasVisiveis.map((familia) => {
                 const etiqueta = etiquetaSituacao(familia);
                 return (
                   <li key={familia.id}>
