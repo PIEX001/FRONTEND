@@ -1,4 +1,5 @@
 import type { FamiliaDetalhe, FamiliaResumo, Membro } from "../types/familia";
+import { getJson, usarDadosDeExemplo } from "./api";
 
 // Dados de exemplo enquanto o endpoint de famílias não está pronto.
 // Quando a API existir, só a função buscarFamilias muda; a tela continua igual.
@@ -16,6 +17,11 @@ function normalizar(texto: string) {
 }
 
 export async function buscarFamilias(termo: string): Promise<FamiliaResumo[]> {
+  // Caminho provisório: confirmar com o Thiago quando o endpoint existir.
+  if (!usarDadosDeExemplo) {
+    return getJson<FamiliaResumo[]>(`/familias?busca=${encodeURIComponent(termo)}`);
+  }
+
   // Atraso falso, só para conseguirmos ver o estado de carregamento na tela.
   await new Promise((resolver) => setTimeout(resolver, 400));
 
@@ -82,6 +88,11 @@ const DETALHES_EXEMPLO: Record<number, { dataReavaliacao: string; membros: Membr
 
 // Devolve null quando a família não existe.
 export async function buscarFamiliaPorId(id: number): Promise<FamiliaDetalhe | null> {
+  // Caminho provisório: confirmar com o Thiago quando o endpoint existir.
+  if (!usarDadosDeExemplo) {
+    return getJson<FamiliaDetalhe>(`/familias/${id}`);
+  }
+
   await new Promise((resolver) => setTimeout(resolver, 300));
 
   const resumo = FAMILIAS_EXEMPLO.find((familia) => familia.id === id);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { Aviso } from "../../components/base/Aviso";
 import { Cabecalho } from "../../components/base/Cabecalho";
 import { Carregando } from "../../components/base/Carregando";
 import { buscarFamiliaPorId } from "../../services/familiaService";
@@ -30,6 +31,7 @@ export function Entrega() {
   const [familia, setFamilia] = useState<FamiliaDetalhe | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [membroId, setMembroId] = useState<number | null>(null);
+  const [erro, setErro] = useState(false);
 
   useEffect(() => {
     let cancelado = false;
@@ -40,6 +42,10 @@ export function Entrega() {
       // Já deixa marcado o primeiro autorizado (normalmente o responsável).
       const primeiro = resultado?.membros.find((membro) => membro.autorizadoRetirar);
       setMembroId(primeiro ? primeiro.id : null);
+    }).catch(() => {
+      if (cancelado) return;
+      setErro(true);
+      setCarregando(false);
     });
     return () => {
       cancelado = true;
@@ -62,7 +68,13 @@ export function Entrega() {
 
         {carregando && <Carregando itens={1} />}
 
-        {!carregando && !familia && (
+        {erro && (
+          <Aviso variante="bloqueio" titulo="Não foi possível carregar a família">
+            <p className="aviso__texto">Verifique a conexão com a internet e volte para a busca.</p>
+          </Aviso>
+        )}
+
+        {!carregando && !erro && !familia && (
           <p className="nota">Família não encontrada. Volte para a busca e tente de novo.</p>
         )}
 

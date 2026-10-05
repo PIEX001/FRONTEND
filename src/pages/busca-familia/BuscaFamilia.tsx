@@ -3,7 +3,10 @@ import { Link } from "react-router-dom";
 import { Cabecalho } from "../../components/base/Cabecalho";
 import { CampoBusca } from "../../components/base/CampoBusca";
 import { Carregando } from "../../components/base/Carregando";
+import { Aviso } from "../../components/base/Aviso";
+import { Button } from "../../components/base/Button";
 import { Situacao } from "../../components/base/Situacao";
+import { Vazio } from "../../components/base/Vazio";
 import { buscarResumoMes } from "../../services/entregaService";
 import { buscarFamilias } from "../../services/familiaService";
 import { listarTurmas } from "../../services/turmaService";
@@ -39,11 +42,14 @@ export function BuscaFamilia() {
   const [resumo, setResumo] = useState<ResumoEntregasMes | null>(null);
   const [turmas, setTurmas] = useState<string[]>([]);
   const [turmaSelecionada, setTurmaSelecionada] = useState(""); // "" = todas
+  const [erro, setErro] = useState(false);
+  const [tentativa, setTentativa] = useState(0); // muda para repetir a busca
   const buscou = termo.trim() !== "";
 
   useEffect(() => {
-    buscarResumoMes().then(setResumo);
-    listarTurmas().then(setTurmas);
+    // Se falharem, a tela continua funcionando sem a barra e sem o filtro.
+    buscarResumoMes().then(setResumo).catch(() => setResumo(null));
+    listarTurmas().then(setTurmas).catch(() => setTurmas([]));
   }, []);
 
   const familiasVisiveis = turmaSelecionada
@@ -57,7 +63,14 @@ export function BuscaFamilia() {
 
   function aoMudarTermo(valor: string) {
     setTermo(valor);
+    setErro(false);
     setCarregando(valor.trim() !== "");
+  }
+
+  function tentarDeNovo() {
+    setErro(false);
+    setCarregando(true);
+    setTentativa((anterior) => anterior + 1);
   }
 
   // Espera a pessoa parar de digitar por 300 ms antes de buscar,
@@ -66,17 +79,23 @@ export function BuscaFamilia() {
     if (!termo.trim()) return;
     let cancelado = false;
     const espera = setTimeout(() => {
-      buscarFamilias(termo).then((resultado) => {
-        if (cancelado) return;
-        setFamilias(resultado);
-        setCarregando(false);
-      });
+      buscarFamilias(termo)
+        .then((resultado) => {
+          if (cancelado) return;
+          setFamilias(resultado);
+          setCarregando(false);
+        })
+        .catch(() => {
+          if (cancelado) return;
+          setErro(true);
+          setCarregando(false);
+        });
     }, 300);
     return () => {
       cancelado = true;
       clearTimeout(espera);
     };
-  }, [termo]);
+  }, [termo, tentativa]);
 
   return (
     <>
@@ -109,7 +128,14 @@ export function BuscaFamilia() {
 
         {buscou && carregando && <Carregando />}
 
-        {buscou && !carregando && (
+        {buscou && !carregando && erro && (
+          <Aviso variante="bloqueio" titulo="Não foi possível buscar as famílias">
+            <p className="aviso__texto">Verifique a conexão com a internet e tente de novo.</p>
+            <Button label="Tentar de novo" variante="secundario" onClick={tentarDeNovo} />
+          </Aviso>
+        )}
+
+        {buscou && !carregando && !erro && (
           <>
             <div className="resultado-topo">
               <p className="resultado-total">
@@ -131,6 +157,17 @@ export function BuscaFamilia() {
                 ))}
               </select>
             </div>
+
+            {familiasVisiveis.length === 0 && (
+              <Vazio
+                titulo={`Nenhuma família encontrada para "${termo.trim()}"`}
+                texto={
+                  familias.length > 0
+                    ? "Há famílias com esse nome em outras turmas. Escolha \"Todas as turmas\" no filtro."
+                    : "Confira se o nome está certo ou tente buscar pelo telefone ou pelo código da família."
+                }
+              />
+            )}
 
             <ul className="lista-familias">
               {familiasVisiveis.map((familia) => {
