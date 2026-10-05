@@ -29,6 +29,7 @@ export function Entrega() {
 
   const [familia, setFamilia] = useState<FamiliaDetalhe | null>(null);
   const [carregando, setCarregando] = useState(true);
+  const [membroId, setMembroId] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelado = false;
@@ -36,6 +37,9 @@ export function Entrega() {
       if (cancelado) return;
       setFamilia(resultado);
       setCarregando(false);
+      // Já deixa marcado o primeiro autorizado (normalmente o responsável).
+      const primeiro = resultado?.membros.find((membro) => membro.autorizadoRetirar);
+      setMembroId(primeiro ? primeiro.id : null);
     });
     return () => {
       cancelado = true;
@@ -43,6 +47,7 @@ export function Entrega() {
   }, [idFamilia]);
 
   const reavaliacaoVencida = familia ? familia.dataReavaliacao <= hojeAAAAMMDD() : false;
+  const autorizados = familia ? familia.membros.filter((membro) => membro.autorizadoRetirar) : [];
 
   return (
     <>
@@ -90,6 +95,30 @@ export function Entrega() {
                   </dl>
                 </section>
               </div>
+
+              <form onSubmit={(e) => e.preventDefault()}>
+                <section className="cartao">
+                  <fieldset className="opcoes">
+                    <legend className="cartao__titulo">Quem está retirando?</legend>
+                    {autorizados.map((membro) => (
+                      <label className="opcao" key={membro.id}>
+                        <input
+                          type="radio"
+                          name="membro"
+                          value={membro.id}
+                          checked={membroId === membro.id}
+                          onChange={() => setMembroId(membro.id)}
+                        />
+                        <span>
+                          {membro.nome}{" "}
+                          <span className="opcao__parentesco">{membro.parentesco}</span>
+                        </span>
+                      </label>
+                    ))}
+                  </fieldset>
+                  <p className="nota">Aparecem só os membros autorizados a retirar.</p>
+                </section>
+              </form>
             </div>
           </>
         )}
