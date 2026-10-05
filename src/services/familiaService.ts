@@ -1,4 +1,4 @@
-import type { FamiliaResumo } from "../types/familia";
+import type { FamiliaDetalhe, FamiliaResumo, Membro } from "../types/familia";
 
 // Dados de exemplo enquanto o endpoint de famílias não está pronto.
 // Quando a API existir, só a função buscarFamilias muda; a tela continua igual.

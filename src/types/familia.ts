@@ -13,3 +13,16 @@ export type FamiliaResumo = {
   situacao: SituacaoEntrega;
   dataUltimaEntrega?: string; // formato AAAA-MM-DD
 };
+
+export type Membro = {
+  id: number;
+  nome: string;
+  parentesco: string; // "Responsável", "Filho", "Esposa"...
+  autorizadoRetirar: boolean;
+};
+
+// Dados completos usados na tela de registro de entrega.
+export type FamiliaDetalhe = FamiliaResumo & {
+  dataReavaliacao: string; // formato AAAA-MM-DD
+  membros: Membro[];
+};
