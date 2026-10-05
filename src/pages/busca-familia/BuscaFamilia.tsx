@@ -12,6 +12,13 @@ import { buscarFamilias } from "../../services/familiaService";
 import { listarTurmas } from "../../services/turmaService";
 import type { ResumoEntregasMes } from "../../types/entrega";
 import type { FamiliaResumo } from "../../types/familia";
+import "./BuscaFamilia.css";
+
+// Filtro de situação: "pendente" junta quem ainda não recebeu, com ou sem reavaliação vencida.
+type FiltroSituacao = "pendente" | "recebida" | "";
+
+// Dias de retirada de cada turma (regras de negócio, seção 11).
+const DIA_DA_TURMA: Record<number, string> = { 15: "Turma 1", 21: "Turma 2" };
 
 // "2026-10" vira "Outubro de 2026".
 function nomeDoMes(mesReferencia: string) {
@@ -38,10 +45,11 @@ function etiquetaSituacao(familia: FamiliaResumo) {
 export function BuscaFamilia() {
   const [termo, setTermo] = useState("");
   const [familias, setFamilias] = useState<FamiliaResumo[]>([]);
-  const [carregando, setCarregando] = useState(false);
+  const [carregando, setCarregando] = useState(true);
   const [resumo, setResumo] = useState<ResumoEntregasMes | null>(null);
   const [turmas, setTurmas] = useState<string[]>([]);
   const [turmaSelecionada, setTurmaSelecionada] = useState(""); // "" = todas
+  const [situacaoSelecionada, setSituacaoSelecionada] = useState<FiltroSituacao>("pendente");
   const [erro, setErro] = useState(false);
   const [tentativa, setTentativa] = useState(0); // muda para repetir a busca
   const buscou = termo.trim() !== "";
@@ -49,12 +57,22 @@ export function BuscaFamilia() {
   useEffect(() => {
     // Se falharem, a tela continua funcionando sem a barra e sem o filtro.
     buscarResumoMes().then(setResumo).catch(() => setResumo(null));
-    listarTurmas().then(setTurmas).catch(() => setTurmas([]));
+    listarTurmas()
+      .then((lista) => {
+        setTurmas(lista);
+        // No dia de retirada de uma turma, a lista já abre nela.
+        const turmaDeHoje = DIA_DA_TURMA[new Date().getDate()];
+        if (turmaDeHoje && lista.includes(turmaDeHoje)) setTurmaSelecionada(turmaDeHoje);
+      })
+      .catch(() => setTurmas([]));
   }, []);
 
-  const familiasVisiveis = turmaSelecionada
-    ? familias.filter((familia) => familia.turma === turmaSelecionada)
-    : familias;
+  const familiasVisiveis = familias.filter((familia) => {
+    if (turmaSelecionada && familia.turma !== turmaSelecionada) return false;
+    if (situacaoSelecionada === "recebida") return familia.situacao === "recebida";
+    if (situacaoSelecionada === "pendente") return familia.situacao !== "recebida";
+    return true;
+  });
 
   const porcentagem =
     resumo && resumo.totalFamilias > 0
@@ -64,7 +82,7 @@ export function BuscaFamilia() {
   function aoMudarTermo(valor: string) {
     setTermo(valor);
     setErro(false);
-    setCarregando(valor.trim() !== "");
+    setCarregando(true);
   }
 
   function tentarDeNovo() {
@@ -73,10 +91,10 @@ export function BuscaFamilia() {
     setTentativa((anterior) => anterior + 1);
   }
 
+  // Com o campo vazio, traz todas as famílias (os filtros fazem o resto).
   // Espera a pessoa parar de digitar por 300 ms antes de buscar,
   // e ignora respostas de buscas antigas.
   useEffect(() => {
-    if (!termo.trim()) return;
     let cancelado = false;
     const espera = setTimeout(() => {
       buscarFamilias(termo)
@@ -126,45 +144,61 @@ export function BuscaFamilia() {
 
         <CampoBusca valor={termo} aoMudar={aoMudarTermo} />
 
-        {buscou && carregando && <Carregando />}
+        {carregando && <Carregando />}
 
-        {buscou && !carregando && erro && (
+        {!carregando && erro && (
           <Aviso variante="bloqueio" titulo="Não foi possível buscar as famílias">
             <p className="aviso__texto">Verifique a conexão com a internet e tente de novo.</p>
             <Button label="Tentar de novo" variante="secundario" onClick={tentarDeNovo} />
           </Aviso>
         )}
 
-        {buscou && !carregando && !erro && (
+        {!carregando && !erro && (
           <>
-            <div className="resultado-topo">
+            <div className="resultado-topo busca__topo">
               <p className="resultado-total">
                 {familiasVisiveis.length === 1
                   ? "1 família"
                   : `${familiasVisiveis.length} famílias`}
               </p>
-              <select
-                className="filtro"
-                aria-label="Turma"
-                value={turmaSelecionada}
-                onChange={(e) => setTurmaSelecionada(e.target.value)}
-              >
-                <option value="">Todas as turmas</option>
-                {turmas.map((turma) => (
-                  <option key={turma} value={turma}>
-                    {turma}
-                  </option>
-                ))}
-              </select>
+              <div className="busca__filtros">
+                <select
+                  className="filtro"
+                  aria-label="Situação"
+                  value={situacaoSelecionada}
+                  onChange={(e) => setSituacaoSelecionada(e.target.value as FiltroSituacao)}
+                >
+                  <option value="pendente">Ainda não receberam</option>
+                  <option value="recebida">Já receberam</option>
+                  <option value="">Todas as situações</option>
+                </select>
+                <select
+                  className="filtro"
+                  aria-label="Turma"
+                  value={turmaSelecionada}
+                  onChange={(e) => setTurmaSelecionada(e.target.value)}
+                >
+                  <option value="">Todas as turmas</option>
+                  {turmas.map((turma) => (
+                    <option key={turma} value={turma}>
+                      {turma}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {familiasVisiveis.length === 0 && (
               <Vazio
-                titulo={`Nenhuma família encontrada para "${termo.trim()}"`}
+                titulo={
+                  buscou
+                    ? `Nenhuma família encontrada para "${termo.trim()}"`
+                    : "Nenhuma família com esses filtros"
+                }
                 texto={
-                  familias.length > 0
-                    ? "Há famílias com esse nome em outras turmas. Escolha \"Todas as turmas\" no filtro."
-                    : "Confira se o nome está certo ou tente buscar pelo telefone ou pelo código da família."
+                  buscou && familias.length === 0
+                    ? "Confira se o nome está certo ou tente buscar pelo telefone ou pelo código da família."
+                    : "Troque a turma ou a situação nos filtros acima."
                 }
               />
             )}

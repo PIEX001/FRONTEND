@@ -18,6 +18,7 @@ function normalizar(texto: string) {
 
 export async function buscarFamilias(termo: string): Promise<FamiliaResumo[]> {
   // Caminho provisório: confirmar com o Thiago quando o endpoint existir.
+  // Com busca vazia, a API deve devolver todas as famílias ativas.
   if (!usarDadosDeExemplo) {
     return getJson<FamiliaResumo[]>(`/familias?busca=${encodeURIComponent(termo)}`);
   }
@@ -26,7 +27,7 @@ export async function buscarFamilias(termo: string): Promise<FamiliaResumo[]> {
   await new Promise((resolver) => setTimeout(resolver, 400));
 
   const texto = normalizar(termo);
-  if (!texto) return [];
+  if (!texto) return [...FAMILIAS_EXEMPLO]; // campo vazio: todas as famílias
   const digitos = termo.replace(/\D/g, "");
 
   return FAMILIAS_EXEMPLO.filter(
