@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Cartao } from "../../components/base/Cartao";
 import { Button } from "../../components/base/Button";
+import { MENSAGENS } from "../../utils/mensagens";
 
 export type UsuarioLogado = {
   nome: string;
@@ -30,9 +31,15 @@ export function Login() {
   const usuario = usuariosFicticios.find(
     (u) => u.login === login.trim() && u.senha === senha
   );
+
+if (!login.trim() || !senha) {
+  setErro(MENSAGENS.login.campoVazio);
+  return;
+}
+
   if (!usuario) {
-    setErro("Login ou senha inválidos.");
-    return;
+  setErro(MENSAGENS.login.erro);
+  return;
   }
   sessionStorage.setItem("usuarioLogado", JSON.stringify(usuario));
   navegar("/busca-familia");
