@@ -5,6 +5,7 @@ import { Aviso } from "../../components/base/Aviso";
 import { Cabecalho } from "../../components/base/Cabecalho";
 import { lerUsuarioLogado } from "../login/Login";
 import { cadastrarMembro } from "../../services/membros";
+import { MENSAGENS } from "../../utils/mensagens";
 
 export function Membros() {
   const usuario = lerUsuarioLogado();
@@ -13,15 +14,21 @@ export function Membros() {
   const [dataNascimento, setDataNascimento] = useState("");
   const [autorizadoRetirar, setAutorizadoRetirar] = useState(false);
   const [sucesso, setSucesso] = useState(false);
+  const [erro, setErro] = useState("");
 
   async function salvar(evento?: React.FormEvent) {
     evento?.preventDefault();
-    await cadastrarMembro("1", { nome, parentesco, dataNascimento, autorizadoRetirar });
-    setSucesso(true);
-    setNome("");
-    setParentesco("");
-    setDataNascimento("");
-    setAutorizadoRetirar(false);
+    try {
+      await cadastrarMembro("1", { nome, parentesco, dataNascimento, autorizadoRetirar });
+      setSucesso(true);
+      setErro("");
+      setNome("");
+      setParentesco("");
+      setDataNascimento("");
+      setAutorizadoRetirar(false);
+    } catch {
+      setErro(MENSAGENS.membros.erro);
+    }
   }
 
   return (
@@ -31,7 +38,12 @@ export function Membros() {
         <h1>Cadastro de membros</h1>
         {sucesso && (
           <Aviso variante="ok" titulo="Membro cadastrado">
-            O membro foi cadastrado com sucesso.
+            {MENSAGENS.membros.sucesso}
+          </Aviso>
+        )}
+        {erro && (
+          <Aviso variante="bloqueio" titulo="Não foi possível salvar">
+            {MENSAGENS.membros.erro}
           </Aviso>
         )}
         <Cartao>
