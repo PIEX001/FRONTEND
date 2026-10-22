@@ -5,6 +5,7 @@ import { Aviso } from "../../components/base/Aviso";
 import { Cabecalho } from "../../components/base/Cabecalho";
 import { lerUsuarioLogado } from "../login/Login";
 import { cadastrarFamilia } from "../../services/familias";
+import { MENSAGENS } from "../../utils/mensagens";
 
 export function Familia() {
   const usuario = lerUsuarioLogado();
@@ -13,22 +14,30 @@ export function Familia() {
   const [telefone, setTelefone] = useState("");
   const [observacoes, setObservacoes] = useState("");
   const [sucesso, setSucesso] = useState(false);
+  const [erro, setErro] = useState("");
 
   async function salvar(evento?: React.FormEvent) {
     evento?.preventDefault();
-    await cadastrarFamilia({
-      nomeResponsavel,
-      endereco,
-      telefone,
-      observacoes,
-      quantidadeMembros: 0,
-    });
-    setSucesso(true);
-    setNomeResponsavel("");
-    setEndereco("");
-    setTelefone("");
-    setObservacoes("");
+    try {
+      await cadastrarFamilia({
+        nomeResponsavel,
+        endereco,
+        telefone,
+        observacoes,
+        quantidadeMembros: 0,
+      });
+      setSucesso(true);
+      setErro("");
+      setNomeResponsavel("");
+      setEndereco("");
+      setTelefone("");
+      setObservacoes("");
+    } catch {
+      setErro(MENSAGENS.familia.erro);
+    }
   }
+
+
 
   return (
     <>
@@ -37,7 +46,13 @@ export function Familia() {
         <h1>Cadastro de família</h1>
         {sucesso && (
           <Aviso variante="ok" titulo="Cadastro realizado">
-            A família foi cadastrada com sucesso.
+            {MENSAGENS.familia.sucesso}
+          </Aviso>
+        )}
+
+        {erro && (
+          <Aviso variante="bloqueio" titulo="Não foi possível salvar">
+            {MENSAGENS.familia.erro}
           </Aviso>
         )}
         <Cartao>
