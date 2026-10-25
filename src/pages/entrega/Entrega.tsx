@@ -1,12 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Aviso } from "../../components/base/Aviso";
 import { Button } from "../../components/base/Button";
 import { Cabecalho } from "../../components/base/Cabecalho";
 import { Carregando } from "../../components/base/Carregando";
 import { Cartao } from "../../components/base/Cartao";
+import { ErroApi } from "../../services/api";
+import { listarEntregasDaFamilia, registrarEntrega } from "../../services/entregaService";
 import { buscarFamiliaPorId } from "../../services/familiaService";
+import type { EntregaRegistrada } from "../../types/entrega";
 import type { FamiliaDetalhe } from "../../types/familia";
+import { EntregaBloqueada } from "./EntregaBloqueada";
+import { EntregaConfirmada } from "./EntregaConfirmada";
+import { ehDesteMes } from "./formatos";
 
 // Usuário fixo até o login existir.
 const USUARIO = "Maria";
@@ -34,15 +40,26 @@ export function Entrega() {
   const idFamilia = Number(parametros.get("familia"));
 
   const [familia, setFamilia] = useState<FamiliaDetalhe | null>(null);
+  const [entregas, setEntregas] = useState<EntregaRegistrada[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [membroId, setMembroId] = useState<number | null>(null);
   const [erro, setErro] = useState(false);
 
+  // Envio da entrega para a API.
+  const [enviando, setEnviando] = useState(false);
+  const [erroEnvio, setErroEnvio] = useState<"ja-recebeu" | "falha" | null>(null);
+  const [registrada, setRegistrada] = useState<EntregaRegistrada | null>(null);
+
   useEffect(() => {
     let cancelado = false;
-    buscarFamiliaPorId(idFamilia).then((resultado) => {
+    // Família e histórico de entregas chegam juntos.
+    Promise.all([
+      buscarFamiliaPorId(idFamilia),
+      listarEntregasDaFamilia(idFamilia),
+    ]).then(([resultado, historico]) => {
       if (cancelado) return;
       setFamilia(resultado);
+      setEntregas(historico);
       setCarregando(false);
       // Já deixa marcado o primeiro autorizado (normalmente o responsável).
       const primeiro = resultado?.membros.find((membro) => membro.autorizadoRetirar);
@@ -64,6 +81,45 @@ export function Entrega() {
   const agora = new Date();
   const dataHoje = agora.toLocaleDateString("pt-BR");
   const horaAgora = agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+  async function confirmar(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    if (!familia || membroId === null || enviando) return;
+
+    setEnviando(true);
+    setErroEnvio(null);
+    try {
+      const entrega = await registrarEntrega({
+        familiaId: familia.id,
+        membroId,
+        funcionario: USUARIO,
+      });
+      setRegistrada(entrega);
+    } catch (falha) {
+      setErroEnvio(falha instanceof ErroApi && falha.status === 409 ? "ja-recebeu" : "falha");
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  if (familia && registrada) {
+    return (
+      <>
+        <Cabecalho usuario={USUARIO} cargo="operadora" />
+        <EntregaConfirmada familia={familia} entrega={registrada} />
+      </>
+    );
+  }
+
+  // Família que já recebeu neste mês nem chega ao formulário.
+  if (familia && entregas.some((entrega) => ehDesteMes(entrega.dataHora))) {
+    return (
+      <>
+        <Cabecalho usuario={USUARIO} cargo="operadora" />
+        <EntregaBloqueada familia={familia} entregas={entregas} />
+      </>
+    );
+  }
 
   return (
     <>
@@ -123,7 +179,7 @@ export function Entrega() {
                 </Cartao>
               </div>
 
-              <form onSubmit={(e) => e.preventDefault()}>
+              <form onSubmit={confirmar}>
                 <Cartao>
                   <fieldset className="opcoes">
                     <legend className="cartao__titulo">Quem está retirando?</legend>
@@ -158,8 +214,24 @@ export function Entrega() {
                   <p className="nota">Preenchidos automaticamente.</p>
                 </Cartao>
 
+                {erroEnvio === "ja-recebeu" && (
+                  <Aviso variante="bloqueio" titulo="Esta família já recebeu a cesta deste mês">
+                    <p className="aviso__texto">Não é possível registrar outra entrega no mesmo mês.</p>
+                  </Aviso>
+                )}
+
+                {erroEnvio === "falha" && (
+                  <Aviso variante="bloqueio" titulo="A entrega não foi registrada">
+                    <p className="aviso__texto">Verifique a conexão com a internet e tente de novo.</p>
+                  </Aviso>
+                )}
+
                 <div className="acao-fixa">
-                  <Button type="submit" label="Confirmar entrega" desabilitado={membroId === null} />
+                  <Button
+                    type="submit"
+                    label={enviando ? "Registrando..." : "Confirmar entrega"}
+                    desabilitado={membroId === null || enviando}
+                  />
                 </div>
               </form>
             </div>
