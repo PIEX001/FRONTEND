@@ -9,5 +9,5 @@ export async function cadastrarMembro(
     return getJson<Membro>(`/familias/${familiaId}/membros`);
   }
   // Dados fictícioss
-  return { ...novoMembro, id: String(Date.now()) };
-}
+  return { ...novoMembro, id: Date.now() };
+}

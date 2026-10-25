@@ -4,6 +4,11 @@ const API_URL: string = import.meta.env.VITE_API_URL ?? "";
 
 export const usarDadosDeExemplo = API_URL === "";
 
+// Mesmo teste ao contrário, usado pelos serviços de cadastro.
+export function apiConfigurada() {
+  return !usarDadosDeExemplo;
+}
+
 // Erro de chamada à API. O status deixa a tela tratar casos específicos,
 // como o 409 de entrega já registrada no mês.
 export class ErroApi extends Error {

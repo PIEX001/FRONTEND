@@ -19,10 +19,22 @@ export type Membro = {
   nome: string;
   parentesco: string; // "Responsável", "Filho", "Esposa"...
   autorizadoRetirar: boolean;
+  dataNascimento?: string; // formato AAAA-MM-DD, vem do cadastro de membros
 };
 
 // Dados completos usados na tela de registro de entrega.
 export type FamiliaDetalhe = FamiliaResumo & {
   dataReavaliacao: string; // formato AAAA-MM-DD
   membros: Membro[];
+  endereco?: string; // vem do cadastro de família
+  observacoes?: string;
+};
+
+// O que a tela de cadastro de família envia.
+export type NovaFamilia = {
+  nomeResponsavel: string;
+  endereco: string;
+  telefone?: string;
+  observacoes?: string;
+  quantidadeMembros: number;
 };
