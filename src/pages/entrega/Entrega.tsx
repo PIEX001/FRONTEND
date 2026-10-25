@@ -5,6 +5,7 @@ import { Button } from "../../components/base/Button";
 import { Cabecalho } from "../../components/base/Cabecalho";
 import { Carregando } from "../../components/base/Carregando";
 import { Cartao } from "../../components/base/Cartao";
+import { Situacao } from "../../components/base/Situacao";
 import { ErroApi } from "../../services/api";
 import { listarEntregasDaFamilia, registrarEntrega } from "../../services/entregaService";
 import { buscarFamiliaPorId } from "../../services/familiaService";
@@ -12,7 +13,7 @@ import type { EntregaRegistrada } from "../../types/entrega";
 import type { FamiliaDetalhe } from "../../types/familia";
 import { EntregaBloqueada } from "./EntregaBloqueada";
 import { EntregaConfirmada } from "./EntregaConfirmada";
-import { ehDesteMes } from "./formatos";
+import { dataCurta, ehDesteMes, mesAtualPorExtenso } from "./formatos";
 
 // Usuário fixo até o login existir.
 const USUARIO = "Maria";
@@ -76,6 +77,12 @@ export function Entrega() {
 
   const reavaliacaoVencida = familia ? familia.dataReavaliacao <= hojeAAAAMMDD() : false;
   const autorizados = familia ? familia.membros.filter((membro) => membro.autorizadoRetirar) : [];
+
+  // Última entrega da família e nome de quem retirou, para o cartão do mês.
+  const ultimaEntrega = entregas[0];
+  const quemRetirouUltima = familia?.membros.find((membro) => membro.id === ultimaEntrega?.membroId);
+  const mes = mesAtualPorExtenso();
+  const tituloMes = mes.charAt(0).toUpperCase() + mes.slice(1);
 
   // Data e horário que vão junto com a entrega, mostrados antes de confirmar.
   const agora = new Date();
@@ -176,6 +183,17 @@ export function Entrega() {
                         : `em ${mesPorExtenso(familia.dataReavaliacao)}`}
                     </dd>
                   </dl>
+                </Cartao>
+
+                <Cartao titulo={tituloMes}>
+                  <Situacao estado="pendente" texto="Ainda não recebeu" />
+                  <p className="nota">
+                    {ultimaEntrega
+                      ? `Última entrega: ${dataCurta(ultimaEntrega.dataHora)}, retirada por ${
+                          quemRetirouUltima?.nome.split(" ")[0] ?? "membro não identificado"
+                        }, entregue por ${ultimaEntrega.funcionario}.`
+                      : "Nenhuma entrega registrada ainda."}
+                  </p>
                 </Cartao>
               </div>
 
