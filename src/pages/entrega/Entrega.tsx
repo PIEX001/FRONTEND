@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Aviso } from "../../components/base/Aviso";
+import { Button } from "../../components/base/Button";
 import { Cabecalho } from "../../components/base/Cabecalho";
 import { Carregando } from "../../components/base/Carregando";
+import { Cartao } from "../../components/base/Cartao";
 import { buscarFamiliaPorId } from "../../services/familiaService";
 import type { FamiliaDetalhe } from "../../types/familia";
+
+// Usuário fixo até o login existir.
+const USUARIO = "Maria";
 
 // "2027-03-01" vira "março de 2027".
 function mesPorExtenso(data: string) {
@@ -55,10 +60,14 @@ export function Entrega() {
   const reavaliacaoVencida = familia ? familia.dataReavaliacao <= hojeAAAAMMDD() : false;
   const autorizados = familia ? familia.membros.filter((membro) => membro.autorizadoRetirar) : [];
 
+  // Data e horário que vão junto com a entrega, mostrados antes de confirmar.
+  const agora = new Date();
+  const dataHoje = agora.toLocaleDateString("pt-BR");
+  const horaAgora = agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
   return (
     <>
-      {/* Usuário fixo até o login existir */}
-      <Cabecalho usuario="Maria" cargo="operadora" />
+      <Cabecalho usuario={USUARIO} cargo="operadora" />
 
       <main className="conteudo">
         <Link className="voltar" to="/busca-familia">
@@ -82,11 +91,17 @@ export function Entrega() {
           <>
             <p className="subtitulo">Confira os dados e escolha quem está retirando a cesta.</p>
 
+            {reavaliacaoVencida && (
+              <Aviso variante="bloqueio" titulo="Reavaliação vencida">
+                <p className="aviso__texto">
+                  A entrega pode ser feita, mas encaminhe a família para a agente social agendar a nova entrevista.
+                </p>
+              </Aviso>
+            )}
+
             <div className="entrega">
               <div>
-                {/* Trocar por <Cartao> quando o componente base estiver pronto */}
-                <section className="cartao">
-                  <h2 className="cartao__titulo">{familia.nomeResponsavel}</h2>
+                <Cartao titulo={familia.nomeResponsavel}>
                   <dl className="dados">
                     <dt>Código</dt>
                     <dd>{familia.codigo}</dd>
@@ -105,11 +120,11 @@ export function Entrega() {
                         : `em ${mesPorExtenso(familia.dataReavaliacao)}`}
                     </dd>
                   </dl>
-                </section>
+                </Cartao>
               </div>
 
               <form onSubmit={(e) => e.preventDefault()}>
-                <section className="cartao">
+                <Cartao>
                   <fieldset className="opcoes">
                     <legend className="cartao__titulo">Quem está retirando?</legend>
                     {autorizados.map((membro) => (
@@ -129,7 +144,23 @@ export function Entrega() {
                     ))}
                   </fieldset>
                   <p className="nota">Aparecem só os membros autorizados a retirar.</p>
-                </section>
+                </Cartao>
+
+                <Cartao>
+                  <dl className="dados">
+                    <dt>Data</dt>
+                    <dd>{dataHoje}</dd>
+                    <dt>Horário</dt>
+                    <dd>{horaAgora}</dd>
+                    <dt>Funcionário</dt>
+                    <dd>{USUARIO}</dd>
+                  </dl>
+                  <p className="nota">Preenchidos automaticamente.</p>
+                </Cartao>
+
+                <div className="acao-fixa">
+                  <Button type="submit" label="Confirmar entrega" desabilitado={membroId === null} />
+                </div>
               </form>
             </div>
           </>
