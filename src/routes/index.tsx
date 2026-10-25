@@ -6,18 +6,61 @@ import { BuscaFamilia } from "../pages/busca-familia/BuscaFamilia";
 import { Entrega } from "../pages/entrega/Entrega";
 import { Estoque } from "../pages/estoque/Estoque";
 import { Relatorios } from "../pages/relatorios/Relatorios";
+import { RotaProtegida } from "./RotaProtegida";
 
 export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/familias" element={<Familia />} />
-      <Route path="/membros" element={<Membros />} />
-      <Route path="/busca-familia" element={<BuscaFamilia />} />
-      <Route path="/entrega" element={<Entrega />} />
-      <Route path="/estoque" element={<Estoque />} />
-      <Route path="/relatorios" element={<Relatorios />} />
+      <Route
+        path="/busca-familia"
+        element={
+          <RotaProtegida>
+            <BuscaFamilia />
+          </RotaProtegida>
+        }
+      />
+      <Route
+        path="/entrega"
+        element={
+          <RotaProtegida>
+            <Entrega />
+          </RotaProtegida>
+        }
+      />
+      <Route
+        path="/familias"
+        element={
+          <RotaProtegida perfis={["administrador"]}>
+            <Familia />
+          </RotaProtegida>
+        }
+      />
+      <Route
+        path="/membros"
+        element={
+          <RotaProtegida perfis={["administrador"]}>
+            <Membros />
+          </RotaProtegida>
+        }
+      />
+      <Route
+        path="/estoque"
+        element={
+          <RotaProtegida perfis={["administrador"]}>
+            <Estoque />
+          </RotaProtegida>
+        }
+      />
+      <Route
+        path="/relatorios"
+        element={
+          <RotaProtegida perfis={["administrador"]}>
+            <Relatorios />
+          </RotaProtegida>
+        }
+      />
     </Routes>
   );
 }
