@@ -7,7 +7,7 @@ import { Carregando } from "../../components/base/Carregando";
 import { gerarRelatorioEntregas } from "../../services/relatorioService";
 import { listarTurmas } from "../../services/turmaService";
 import type { RelatorioEntregas } from "../../types/relatorio";
-import { lerUsuarioLogado } from "../login/Login";
+import { lerUsuarioLogado } from "../../services/sessao";
 import { ListaEntregas } from "./ListaEntregas";
 import { ResumoPorTurma } from "./ResumoPorTurma";
 import "./Relatorios.css";
@@ -79,7 +79,7 @@ export function Relatorios() {
 
   return (
     <>
-      <Cabecalho usuario={usuario?.nome ?? ""} cargo="administrador" />
+      <Cabecalho />
 
       <main className="conteudo relatorio">
         <Link className="voltar so-tela" to="/busca-familia">

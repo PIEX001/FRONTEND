@@ -34,6 +34,7 @@ export type FamiliaDetalhe = FamiliaResumo & {
 export type NovaFamilia = {
   nomeResponsavel: string;
   endereco: string;
+  turma: string;
   telefone?: string;
   observacoes?: string;
   quantidadeMembros: number;

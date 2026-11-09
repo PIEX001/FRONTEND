@@ -117,8 +117,7 @@ export function BuscaFamilia() {
 
   return (
     <>
-      {/* Usuário fixo até o login existir */}
-      <Cabecalho usuario="Maria" cargo="operadora" />
+      <Cabecalho />
 
       <main className="conteudo">
         <h1>Entrega de cestas</h1>
