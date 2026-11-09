@@ -47,6 +47,7 @@ No modo de demonstração, valem só estes usuários fictícios:
 | Estoque | `GET /stock/balance`, `GET /stock/movement?basketTypeId=`, `POST /stock/movement/` |
 | Relatórios | `GET /delivery/report?month=&deliveryClassId=` |
 | Cadastros | `POST /family/`, `GET /{id}/information`, `POST /family/{id}/members` |
+| Equipe | `POST /User/user/create` (só administrador; senha inicial gerada pelo front, troca obrigatória no primeiro acesso) |
 
 A conversão do formato da API para o das telas fica nos arquivos de `src/services`.
 
@@ -59,6 +60,7 @@ A conversão do formato da API para o das telas fica nos arquivos de `src/servic
 - `/familias`, `/membros`: cadastros (administrador)
 - `/estoque`: entradas e saídas de cestas (administrador)
 - `/relatorios`: relatório mensal de entregas, com impressão em PDF (administrador)
+- `/equipe`: criar login de funcionários e voluntários (administrador)
 
 ## Publicar na Vercel
 

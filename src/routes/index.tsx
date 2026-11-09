@@ -7,6 +7,7 @@ import { Entrega } from "../pages/entrega/Entrega";
 import { Estoque } from "../pages/estoque/Estoque";
 import { Relatorios } from "../pages/relatorios/Relatorios";
 import { TrocarSenha } from "../pages/trocar-senha/TrocarSenha";
+import { Usuarios } from "../pages/usuarios/Usuarios";
 import { RotaProtegida } from "./RotaProtegida";
 
 export function AppRoutes() {
@@ -62,6 +63,14 @@ export function AppRoutes() {
         element={
           <RotaProtegida perfis={["administrador"]}>
             <Relatorios />
+          </RotaProtegida>
+        }
+      />
+      <Route
+        path="/equipe"
+        element={
+          <RotaProtegida perfis={["administrador"]}>
+            <Usuarios />
           </RotaProtegida>
         }
       />

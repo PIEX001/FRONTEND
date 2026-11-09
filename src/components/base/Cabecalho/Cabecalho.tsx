@@ -9,6 +9,7 @@ const MENU_ADMINISTRADOR = [
   { para: "/membros", texto: "Membros" },
   { para: "/estoque", texto: "Estoque" },
   { para: "/relatorios", texto: "Relatórios" },
+  { para: "/equipe", texto: "Equipe" },
 ];
 
 const NOME_DO_PERFIL = { administrador: "administrador", operador: "operador" } as const;
