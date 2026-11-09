@@ -4,7 +4,7 @@ import { Button } from "../../components/base/Button";
 import { Aviso } from "../../components/base/Aviso";
 import { Cabecalho } from "../../components/base/Cabecalho";
 import { ErroApi } from "../../services/api";
-import { cadastrarUsuario, FUNCOES, gerarSenhaInicial } from "../../services/usuarios";
+import { cadastrarUsuario, FUNCOES, gerarNovaSenha, gerarSenhaInicial, type SenhaNova } from "../../services/usuarios";
 import { cpfValido, separarNome, telefoneValido } from "../../utils/validacao";
 
 type Criado = { nome: string; email: string; senha: string };
@@ -27,6 +27,11 @@ export function Usuarios() {
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
   const [criado, setCriado] = useState<Criado | null>(null);
+  // "Esqueceu a senha?"
+  const [emailEsqueceu, setEmailEsqueceu] = useState("");
+  const [gerando, setGerando] = useState(false);
+  const [erroSenha, setErroSenha] = useState("");
+  const [senhaNova, setSenhaNova] = useState<SenhaNova | null>(null);
 
   function conferir() {
     if (!nome.trim() || !email.trim() || !cpf.trim() || !telefone.trim() || !dataNascimento) {
@@ -49,7 +54,7 @@ export function Usuarios() {
       return;
     }
 
-    const senha = gerarSenhaInicial();
+    const senha = gerarSenhaInicial(nome);
     setEnviando(true);
     setErro("");
     setCriado(null);
@@ -73,12 +78,35 @@ export function Usuarios() {
     }
   }
 
+  async function novaSenha(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    if (gerando) return;
+    if (!/^\S+@\S+\.\S+$/.test(emailEsqueceu.trim())) {
+      setErroSenha("Digite o e-mail de login da pessoa.");
+      return;
+    }
+    setGerando(true);
+    setErroSenha("");
+    setSenhaNova(null);
+    try {
+      setSenhaNova(await gerarNovaSenha(emailEsqueceu));
+      setEmailEsqueceu("");
+    } catch (falha) {
+      if (falha instanceof ErroApi && falha.status === 404) setErroSenha("Não existe login com este e-mail.");
+      else if (falha instanceof ErroApi && falha.status === 403) setErroSenha("Só administradores podem gerar nova senha.");
+      else if (falha instanceof ErroApi && falha.status === 422) setErroSenha("Para mudar a sua própria senha, use o endereço /trocar-senha.");
+      else setErroSenha("Não foi possível gerar a nova senha. Tente novamente.");
+    } finally {
+      setGerando(false);
+    }
+  }
+
   return (
     <>
       <Cabecalho />
       <main className="conteudo conteudo--estreito">
         <h1>Equipe</h1>
-        <p className="subtitulo">Crie o login de funcionários e voluntários. A senha inicial é gerada pelo sistema.</p>
+        <p className="subtitulo">Crie o login de funcionários e voluntários. A senha inicial é o primeiro nome com @ e números, como Carlos@4821.</p>
 
         {criado && (
           <Aviso variante="ok" titulo={`Login de ${criado.nome.split(" ")[0]} criado`}>
@@ -158,6 +186,49 @@ export function Usuarios() {
               type="submit"
               label={enviando ? "Criando..." : "Criar login"}
               desabilitado={enviando}
+              className="botao--formulario"
+            />
+          </form>
+        </Cartao>
+
+        <h2 className="titulo-secao" id="esqueceu">Esqueceu a senha?</h2>
+        <p className="subtitulo">Gere uma senha nova para a pessoa. A antiga deixa de funcionar na hora.</p>
+
+        {senhaNova && (
+          <Aviso variante="ok" titulo={`Nova senha de ${senhaNova.nome.split(" ")[0]}`}>
+            <dl className="dados">
+              <dt>E-mail</dt>
+              <dd>{senhaNova.email}</dd>
+              <dt>Nova senha</dt>
+              <dd className="senha-inicial">{senhaNova.senha}</dd>
+            </dl>
+            <p className="aviso__texto">Entregue para a pessoa. Ao entrar, ela vai criar uma senha só dela de novo.</p>
+          </Aviso>
+        )}
+
+        {erroSenha && (
+          <Aviso variante="bloqueio" titulo="Não foi possível gerar">
+            <p className="aviso__texto">{erroSenha}</p>
+          </Aviso>
+        )}
+
+        <Cartao>
+          <form onSubmit={novaSenha} noValidate>
+            <label htmlFor="email-esqueceu">E-mail de login da pessoa</label>
+            <input
+              id="email-esqueceu"
+              type="email"
+              inputMode="email"
+              autoCapitalize="none"
+              value={emailEsqueceu}
+              onChange={(e) => setEmailEsqueceu(e.target.value)}
+              autoComplete="off"
+            />
+            <Button
+              type="submit"
+              variante="secundario"
+              label={gerando ? "Gerando..." : "Gerar nova senha"}
+              desabilitado={gerando}
               className="botao--formulario"
             />
           </form>

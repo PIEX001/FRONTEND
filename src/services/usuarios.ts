@@ -31,12 +31,21 @@ const ENDERECO_DA_CASA = {
   country: "Brasil",
 };
 
-// Senha inicial fácil de ditar e digitar, que já passa na regra de senha forte.
-// No primeiro acesso a pessoa é obrigada a trocar.
-export function gerarSenhaInicial() {
-  const numeros = new Uint32Array(1);
-  crypto.getRandomValues(numeros);
-  return `Cesta@${String(numeros[0] % 10000).padStart(4, "0")}`;
+// Senha inicial ligada ao nome, fácil de ditar e digitar: primeiro nome sem acento + @ + números.
+// Ex.: "Carlos Souza" vira "Carlos@4821". Os números são sorteados, então não dá para adivinhar
+// só pelo nome, e no primeiro acesso a pessoa é obrigada a trocar.
+// Já passa na regra de senha forte da API: maiúscula, minúscula, número, símbolo e 8 ou mais caracteres.
+export function gerarSenhaInicial(nomeCompleto: string) {
+  const primeiro = nomeCompleto.trim().split(/\s+/)[0] ?? "";
+  const letras = primeiro.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z]/g, "");
+  // Nome com uma letra só não teria minúscula: usa "Cesta" no lugar.
+  const base = letras.length >= 2 ? letras[0].toUpperCase() + letras.slice(1).toLowerCase() : "Cesta";
+  // Nomes curtos (Ana, Lu) ganham mais números para chegar a 8 caracteres.
+  const quantidade = Math.max(4, 7 - base.length);
+  const sorteio = new Uint32Array(1);
+  crypto.getRandomValues(sorteio);
+  const numeros = String(sorteio[0] % 10 ** quantidade).padStart(quantidade, "0");
+  return `${base}@${numeros}`;
 }
 
 function hoje() {
@@ -62,4 +71,23 @@ export async function cadastrarUsuario(novo: NovoUsuario): Promise<void> {
     address: ENDERECO_DA_CASA,
     entryDate: hoje(),
   });
+}
+
+export type SenhaNova = { nome: string; email: string; senha: string };
+
+// Para quem esqueceu a senha: a administradora gera uma nova, no mesmo formato da inicial.
+// A pessoa volta a ter primeiro acesso (troca obrigatória) e as sessões abertas dela são encerradas.
+// 404: e-mail sem login. 403: quem está logado não é administrador. 422: é o próprio e-mail.
+export async function gerarNovaSenha(email: string): Promise<SenhaNova> {
+  const emailLimpo = email.trim().toLowerCase();
+  if (usarDadosDeExemplo) {
+    await new Promise((resolver) => setTimeout(resolver, 400));
+    const nome = emailLimpo.split("@")[0];
+    return { nome, email: emailLimpo, senha: gerarSenhaInicial(nome) };
+  }
+  const resposta = await postJson<{ name: string; email: string; temporaryPassword: string }>(
+    "/User/user/reset-password",
+    { email: emailLimpo },
+  );
+  return { nome: resposta.name, email: resposta.email, senha: resposta.temporaryPassword };
 }

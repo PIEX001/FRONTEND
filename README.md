@@ -47,7 +47,7 @@ No modo de demonstração, valem só estes usuários fictícios:
 | Estoque | `GET /stock/balance`, `GET /stock/movement?basketTypeId=`, `POST /stock/movement/` |
 | Relatórios | `GET /delivery/report?month=&deliveryClassId=` |
 | Cadastros | `POST /family/`, `GET /{id}/information`, `POST /family/{id}/members` |
-| Equipe | `POST /User/user/create` (só administrador; senha inicial gerada pelo front, troca obrigatória no primeiro acesso) |
+| Equipe | `POST /User/user/create` e `POST /User/user/reset-password` (só administrador; senha = primeiro nome + @ + números, troca obrigatória no próximo acesso) |
 
 A conversão do formato da API para o das telas fica nos arquivos de `src/services`.
 
