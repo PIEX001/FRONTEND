@@ -107,7 +107,9 @@ export function Estoque() {
                   {saldo.saldo}
                   <span>{saldo.saldo === 1 ? "cesta" : "cestas"}</span>
                 </p>
-                <p className="nota">Última movimentação em {dataHoraCurta(saldo.atualizadoEm)}.</p>
+                {saldo.atualizadoEm && (
+                  <p className="nota">Última movimentação em {dataHoraCurta(saldo.atualizadoEm)}.</p>
+                )}
                 {falta !== null && pendentes !== null && pendentes > 0 && (
                   <div className="estoque__cobertura">
                     <Situacao

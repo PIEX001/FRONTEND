@@ -1,5 +1,24 @@
 import type { EntregaDoRelatorio, RelatorioEntregas, ResumoTurma } from "../types/relatorio";
 import { getJson, usarDadosDeExemplo } from "./api";
+import { idDaTurma } from "./turmaService";
+
+// Formato da API .NET (GET /delivery/report)
+type RelatorioDaApi = {
+  month: string;
+  totalFamilies: number;
+  familiesServed: number;
+  basketsDelivered: number;
+  byClass: { deliveryClassName: string; totalFamilies: number; familiesServed: number }[];
+  deliveries: {
+    id: number;
+    registeredAt: string;
+    familyCode: string;
+    familyName: string;
+    deliveryClassName: string | null;
+    personName: string;
+    employeeName: string;
+  }[];
+};
 
 // Total de famílias por turma nos dados de exemplo (soma 212, igual ao resumo da busca).
 const TURMAS_EXEMPLO = [
@@ -59,11 +78,31 @@ function entregasExemplo(mesReferencia: string, indiceTurma: number, quantidade:
 
 // mesReferencia no formato AAAA-MM. Turma vazia traz todas.
 export async function gerarRelatorioEntregas(mesReferencia: string, turma: string): Promise<RelatorioEntregas> {
-  // Caminho provisório: confirmar com a Tayná quando a consulta existir.
   if (!usarDadosDeExemplo) {
-    const filtro = new URLSearchParams({ mes: mesReferencia });
-    if (turma) filtro.set("turma", turma);
-    return getJson<RelatorioEntregas>(`/relatorios/entregas?${filtro}`);
+    const filtro = new URLSearchParams({ month: mesReferencia });
+    const turmaId = await idDaTurma(turma);
+    if (turmaId !== undefined) filtro.set("deliveryClassId", String(turmaId));
+    const relatorio = await getJson<RelatorioDaApi>(`/delivery/report?${filtro}`);
+    return {
+      mesReferencia: relatorio.month,
+      totalFamilias: relatorio.totalFamilies,
+      familiasAtendidas: relatorio.familiesServed,
+      cestasEntregues: relatorio.basketsDelivered,
+      porTurma: relatorio.byClass.map((linha) => ({
+        turma: linha.deliveryClassName,
+        totalFamilias: linha.totalFamilies,
+        familiasAtendidas: linha.familiesServed,
+      })),
+      entregas: relatorio.deliveries.map((entrega) => ({
+        id: entrega.id,
+        dataHora: entrega.registeredAt,
+        familiaCodigo: entrega.familyCode,
+        familiaNome: entrega.familyName,
+        turma: entrega.deliveryClassName ?? "Sem turma",
+        retiradoPor: entrega.personName,
+        funcionario: entrega.employeeName,
+      })),
+    };
   }
 
   await new Promise((resolver) => setTimeout(resolver, 400));

@@ -49,7 +49,7 @@ export function Entrega() {
 
   // Envio da entrega para a API.
   const [enviando, setEnviando] = useState(false);
-  const [erroEnvio, setErroEnvio] = useState<"ja-recebeu" | "falha" | null>(null);
+  const [erroEnvio, setErroEnvio] = useState<"ja-recebeu" | "falha" | "sem-permissao" | null>(null);
   const [registrada, setRegistrada] = useState<EntregaRegistrada | null>(null);
 
   useEffect(() => {
@@ -76,8 +76,10 @@ export function Entrega() {
     };
   }, [idFamilia]);
 
-  const reavaliacaoVencida = familia ? familia.dataReavaliacao <= hojeAAAAMMDD() : false;
+  const reavaliacaoVencida = familia?.dataReavaliacao ? familia.dataReavaliacao <= hojeAAAAMMDD() : false;
   const autorizados = familia ? familia.membros.filter((membro) => membro.autorizadoRetirar) : [];
+  // Cadastro inativo ou suspenso na API: a entrega é recusada, então nem deixa confirmar.
+  const suspensa = familia?.situacao === "suspensa";
 
   // Última entrega da família e nome de quem retirou, para o cartão do mês.
   const ultimaEntrega = entregas[0];
@@ -104,7 +106,9 @@ export function Entrega() {
       });
       setRegistrada(entrega);
     } catch (falha) {
-      setErroEnvio(falha instanceof ErroApi && falha.status === 409 ? "ja-recebeu" : "falha");
+      if (falha instanceof ErroApi && falha.status === 409) setErroEnvio("ja-recebeu");
+      else if (falha instanceof ErroApi && falha.status === 403) setErroEnvio("sem-permissao");
+      else setErroEnvio("falha");
     } finally {
       setEnviando(false);
     }
@@ -155,6 +159,14 @@ export function Entrega() {
           <>
             <p className="subtitulo">Confira os dados e escolha quem está retirando a cesta.</p>
 
+            {suspensa && (
+              <Aviso variante="bloqueio" titulo="Cadastro suspenso">
+                <p className="aviso__texto">
+                  Esta família está com o cadastro inativo ou suspenso. Procure a agente social antes de entregar a cesta.
+                </p>
+              </Aviso>
+            )}
+
             {reavaliacaoVencida && (
               <Aviso variante="bloqueio" titulo="Reavaliação vencida">
                 <p className="aviso__texto">
@@ -177,12 +189,16 @@ export function Entrega() {
                         <dd>{familia.telefone}</dd>
                       </>
                     )}
-                    <dt>Reavaliação</dt>
-                    <dd>
-                      {reavaliacaoVencida
-                        ? `vencida desde ${mesPorExtenso(familia.dataReavaliacao)}`
-                        : `em ${mesPorExtenso(familia.dataReavaliacao)}`}
-                    </dd>
+                    {familia.dataReavaliacao && (
+                      <>
+                        <dt>Reavaliação</dt>
+                        <dd>
+                          {reavaliacaoVencida
+                            ? `vencida desde ${mesPorExtenso(familia.dataReavaliacao)}`
+                            : `em ${mesPorExtenso(familia.dataReavaliacao)}`}
+                        </dd>
+                      </>
+                    )}
                   </dl>
                 </Cartao>
 
@@ -191,7 +207,7 @@ export function Entrega() {
                   <p className="nota">
                     {ultimaEntrega
                       ? `Última entrega: ${dataCurta(ultimaEntrega.dataHora)}, retirada por ${
-                          quemRetirouUltima?.nome.split(" ")[0] ?? "membro não identificado"
+                          (quemRetirouUltima?.nome ?? ultimaEntrega.membroNome)?.split(" ")[0] ?? "membro não identificado"
                         }, entregue por ${ultimaEntrega.funcionario}.`
                       : "Nenhuma entrega registrada ainda."}
                   </p>
@@ -239,6 +255,12 @@ export function Entrega() {
                   </Aviso>
                 )}
 
+                {erroEnvio === "sem-permissao" && (
+                  <Aviso variante="bloqueio" titulo="Seu usuário não pode registrar entregas">
+                    <p className="aviso__texto">Peça a um administrador para registrar ou para mudar o seu cargo.</p>
+                  </Aviso>
+                )}
+
                 {erroEnvio === "falha" && (
                   <Aviso variante="bloqueio" titulo="A entrega não foi registrada">
                     <p className="aviso__texto">Verifique a conexão com a internet e tente de novo.</p>
@@ -249,7 +271,7 @@ export function Entrega() {
                   <Button
                     type="submit"
                     label={enviando ? "Registrando..." : "Confirmar entrega"}
-                    desabilitado={membroId === null || enviando}
+                    desabilitado={membroId === null || enviando || suspensa}
                   />
                 </div>
               </form>

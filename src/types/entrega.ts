@@ -16,5 +16,6 @@ export type NovaEntrega = {
 // O que a API devolve depois de registrar a entrega.
 export type EntregaRegistrada = NovaEntrega & {
   id: number;
+  membroNome?: string; // a API grava o nome de quem retirou, mesmo se o membro sair da família
   dataHora: string; // formato ISO, ex.: 2026-10-25T14:32:00
 };

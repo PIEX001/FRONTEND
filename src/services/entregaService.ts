@@ -1,11 +1,49 @@
 import type { EntregaRegistrada, NovaEntrega, ResumoEntregasMes } from "../types/entrega";
 import { ErroApi, getJson, postJson, usarDadosDeExemplo } from "./api";
 
+// ---------------------------------------------------------------------------
+// Formato da API .NET (DeliveryController)
+
+type EntregaDaApi = {
+  id: number;
+  familyId: number;
+  personId: number | null;
+  personName: string;
+  employeeName: string;
+  registeredAt: string; // ISO em UTC
+};
+
+export type ResumoDoMesDaApi = {
+  month: string; // AAAA-MM
+  totalFamilies: number;
+  familiesServed: number;
+  basketsDelivered: number;
+  servedFamilies: { familyId: number; deliveryDate: string }[]; // deliveryDate AAAA-MM-DD
+};
+
+function daApi(entrega: EntregaDaApi): EntregaRegistrada {
+  return {
+    id: entrega.id,
+    familiaId: entrega.familyId,
+    membroId: entrega.personId ?? 0,
+    membroNome: entrega.personName,
+    funcionario: entrega.employeeName,
+    dataHora: entrega.registeredAt,
+  };
+}
+
+// Também usado pela busca, para marcar quem já recebeu no mês.
+export function buscarResumoDoMesDaApi(): Promise<ResumoDoMesDaApi> {
+  return getJson<ResumoDoMesDaApi>("/delivery/summary");
+}
+
+// ---------------------------------------------------------------------------
+
 // Resumo de exemplo enquanto o endpoint de entregas não está pronto.
 export async function buscarResumoMes(): Promise<ResumoEntregasMes> {
-  // Caminho provisório: confirmar com a Tayná quando o endpoint existir.
   if (!usarDadosDeExemplo) {
-    return getJson<ResumoEntregasMes>("/entregas/resumo-mes");
+    const resumo = await buscarResumoDoMesDaApi();
+    return { mesReferencia: resumo.month, totalFamilias: resumo.totalFamilies, familiasAtendidas: resumo.familiesServed };
   }
 
   await new Promise((resolver) => setTimeout(resolver, 200));
@@ -59,9 +97,8 @@ export function entregaDoMesExemplo(familiaId: number): EntregaRegistrada | unde
 
 // Entregas da família, da mais recente para a mais antiga.
 export async function listarEntregasDaFamilia(familiaId: number): Promise<EntregaRegistrada[]> {
-  // Caminho provisório: confirmar com a Tayná quando o endpoint existir.
   if (!usarDadosDeExemplo) {
-    return getJson<EntregaRegistrada[]>(`/familias/${familiaId}/entregas`);
+    return (await getJson<EntregaDaApi[]>(`/delivery/family/${familiaId}`)).map(daApi);
   }
 
   await new Promise((resolver) => setTimeout(resolver, 300));
@@ -74,9 +111,9 @@ export async function listarEntregasDaFamilia(familiaId: number): Promise<Entreg
 // Registra a entrega da cesta. A API responde 409 quando a família
 // já recebeu no mês, e a tela usa isso para mostrar o bloqueio.
 export async function registrarEntrega(nova: NovaEntrega): Promise<EntregaRegistrada> {
-  // Caminho provisório: confirmar com a Tayná quando o endpoint existir.
+  // O funcionário não vai no corpo: a API usa quem está logado.
   if (!usarDadosDeExemplo) {
-    return postJson<EntregaRegistrada>("/entregas", nova);
+    return daApi(await postJson<EntregaDaApi>("/delivery", { familyId: nova.familiaId, personId: nova.membroId }));
   }
 
   await new Promise((resolver) => setTimeout(resolver, 500));

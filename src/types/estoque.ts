@@ -21,5 +21,5 @@ export type Movimentacao = NovaMovimentacao & {
 // Saldo atual de cestas no estoque.
 export type SaldoEstoque = {
   saldo: number;
-  atualizadoEm: string; // formato ISO, data da última movimentação
+  atualizadoEm?: string; // formato ISO, data da última movimentação (vazio se não houver)
 };

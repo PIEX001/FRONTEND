@@ -4,10 +4,14 @@ import { Cartao } from "../../components/base/Cartao";
 import { Button } from "../../components/base/Button";
 import { Aviso } from "../../components/base/Aviso";
 import { Cabecalho } from "../../components/base/Cabecalho";
+import { CamposPessoais } from "../../components/CamposPessoais/CamposPessoais";
+import { ErroApi } from "../../services/api";
 import { buscarFamilias } from "../../services/familiaService";
 import { cadastrarMembro } from "../../services/membros";
-import type { FamiliaResumo } from "../../types/familia";
+import type { DadosPessoais, FamiliaResumo } from "../../types/familia";
+import { conferirDadosPessoais, DADOS_PESSOAIS_VAZIOS } from "../../utils/dadosPessoais";
 import { MENSAGENS } from "../../utils/mensagens";
+import { separarNome } from "../../utils/validacao";
 
 export function Membros() {
   // O cadastro de família abre esta tela como /membros?familia=ID
@@ -16,7 +20,7 @@ export function Membros() {
   const [familiaId, setFamiliaId] = useState(parametros.get("familia") ?? "");
   const [nome, setNome] = useState("");
   const [parentesco, setParentesco] = useState("");
-  const [dataNascimento, setDataNascimento] = useState("");
+  const [dados, setDados] = useState<DadosPessoais>(DADOS_PESSOAIS_VAZIOS);
   const [autorizadoRetirar, setAutorizadoRetirar] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [sucesso, setSucesso] = useState("");
@@ -36,6 +40,15 @@ export function Membros() {
       setErro(MENSAGENS.membros.campoVazio);
       return;
     }
+    if (!separarNome(nome)) {
+      setErro("Digite o nome e o sobrenome do membro.");
+      return;
+    }
+    const problema = conferirDadosPessoais(dados);
+    if (problema) {
+      setErro(problema);
+      return;
+    }
 
     setEnviando(true);
     setErro("");
@@ -44,18 +57,22 @@ export function Membros() {
       await cadastrarMembro(Number(familiaId), {
         nome: nome.trim(),
         parentesco: parentesco.trim(),
-        dataNascimento: dataNascimento || undefined,
+        dataNascimento: dados.dataNascimento,
         autorizadoRetirar,
+        dados,
       });
       const familia = familias.find((item) => String(item.id) === familiaId);
       setSucesso(`${nome.trim()} entrou na família de ${familia?.nomeResponsavel ?? "código " + familiaId}.`);
       // A família continua escolhida para cadastrar o próximo membro.
       setNome("");
       setParentesco("");
-      setDataNascimento("");
+      setDados(DADOS_PESSOAIS_VAZIOS);
       setAutorizadoRetirar(false);
-    } catch {
-      setErro(MENSAGENS.membros.erro);
+    } catch (falha) {
+      // 409: a API recusou o membro (CPF já cadastrado em outra família, por exemplo).
+      if (falha instanceof ErroApi && falha.status === 409) setErro("O membro não entrou: o CPF já está cadastrado em outra família.");
+      else if (falha instanceof ErroApi && (falha.status === 400 || falha.status === 422)) setErro("A API recusou algum dado. Confira CPF e datas.");
+      else setErro(MENSAGENS.membros.erro);
     } finally {
       setEnviando(false);
     }
@@ -90,7 +107,7 @@ export function Membros() {
                 </option>
               ))}
             </select>
-            <label htmlFor="nome-membro" className="campo-seguinte">Nome *</label>
+            <label htmlFor="nome-membro" className="campo-seguinte">Nome completo *</label>
             <input id="nome-membro" value={nome} onChange={(e) => setNome(e.target.value)} autoComplete="off" />
             <label htmlFor="parentesco" className="campo-seguinte">Parentesco *</label>
             <input
@@ -100,13 +117,7 @@ export function Membros() {
               placeholder="Ex.: Filho, Esposa, Neta"
               autoComplete="off"
             />
-            <label htmlFor="nascimento" className="campo-seguinte">Data de nascimento</label>
-            <input
-              id="nascimento"
-              type="date"
-              value={dataNascimento}
-              onChange={(e) => setDataNascimento(e.target.value)}
-            />
+            <CamposPessoais prefixo="membro" dados={dados} aoMudar={setDados} />
             <label className="campo-seguinte campo-marcar">
               <input
                 type="checkbox"

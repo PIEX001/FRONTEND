@@ -31,7 +31,7 @@ export function EntregaBloqueada({ familia, entregas }: EntregaBloqueadaProps) {
           <dd>
             {quemRetirou
               ? `${quemRetirou.nome} (${quemRetirou.parentesco.toLowerCase()})`
-              : "Membro não identificado"}
+              : ultima.membroNome ?? "Membro não identificado"}
           </dd>
           <dt>Data</dt>
           <dd>{dataHoraCurta(ultima.dataHora)}</dd>
@@ -62,7 +62,7 @@ export function EntregaBloqueada({ familia, entregas }: EntregaBloqueadaProps) {
             <li key={entrega.id}>
               <span>{dataCurta(entrega.dataHora)}</span>
               <span>
-                {membroDe(entrega)?.nome.split(" ")[0] ?? "Membro"}, por {entrega.funcionario}
+                {(membroDe(entrega)?.nome ?? entrega.membroNome)?.split(" ")[0] ?? "Membro"}, por {entrega.funcionario}
               </span>
             </li>
           ))}

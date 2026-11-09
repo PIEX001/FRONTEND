@@ -19,10 +19,16 @@ nada fica salvo e uma faixa amarela no topo avisa isso. Dá para testar tudo sem
 
 ## Login
 
-Com a API configurada, o login chama `POST /auth/login` e guarda o token na sessão do navegador
+Com a API configurada, o login é pelo **e-mail** (`POST /User/login`), e o token fica na sessão do navegador
 (some ao fechar a aba). Todas as chamadas mandam `Authorization: Bearer <token>`.
-Se a API responder 401 no meio do uso, o sistema sai e volta para o login com o aviso de sessão terminada.
-O usuário é enviado sem espaços e em minúsculas.
+O cargo do usuário vira o perfil do front: Admin, Developer e Assistant usam todas as telas; Collaborator e
+Pharmaceutical ficam com busca e entrega. A API confere cada permissão de novo.
+
+- **Primeiro acesso:** a API avisa (`isFirstLogin`) e o front obriga a trocar a senha em `/trocar-senha`.
+- **Sessão vencida:** se a API responder 401, o sistema volta para o login com aviso.
+- **Sair** encerra o token também na API.
+- **Servidor dormindo:** o Render gratuito leva até 1 minuto para acordar. O login já chama `/health` ao abrir,
+  e qualquer chamada que passa de 4 segundos mostra a faixa "Conectando ao servidor".
 
 No modo de demonstração, valem só estes usuários fictícios:
 
@@ -31,11 +37,23 @@ No modo de demonstração, valem só estes usuários fictícios:
 | maria | 123 | operador | Busca e registro de entrega |
 | admin | admin | administrador | Todas, pelo menu do topo |
 
-Com a API configurada, eles deixam de funcionar: quem confere usuário e senha é o back-end.
+## Rotas da API usadas
+
+| Tela | Rotas |
+| --- | --- |
+| Login | `POST /User/login`, `GET /User/user/about`, `PATCH /User/user/password`, `POST /User/logout` |
+| Busca | `GET /family?term=`, `GET /delivery/summary`, `GET /class` |
+| Entrega | `GET /family/{id}`, `GET /delivery/family/{id}`, `POST /delivery` |
+| Estoque | `GET /stock/balance`, `GET /stock/movement?basketTypeId=`, `POST /stock/movement/` |
+| Relatórios | `GET /delivery/report?month=&deliveryClassId=` |
+| Cadastros | `POST /family/`, `GET /{id}/information`, `POST /family/{id}/members` |
+
+A conversão do formato da API para o das telas fica nos arquivos de `src/services`.
 
 ## Telas
 
 - `/login`: entrada no sistema
+- `/trocar-senha`: troca de senha (obrigatória no primeiro acesso)
 - `/busca-familia`: busca de família e situação da cesta do mês
 - `/entrega?familia=ID`: registro de entrega
 - `/familias`, `/membros`: cadastros (administrador)

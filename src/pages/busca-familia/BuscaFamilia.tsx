@@ -36,6 +36,9 @@ function etiquetaSituacao(familia: FamiliaResumo) {
     const [, mes, dia] = familia.dataUltimaEntrega.split("-");
     return { estado: "ok", texto: `Recebeu em ${dia}/${mes}` } as const;
   }
+  if (familia.situacao === "suspensa") {
+    return { estado: "alerta", texto: "Cadastro suspenso" } as const;
+  }
   if (familia.situacao === "reavaliacao-vencida") {
     return { estado: "alerta", texto: "Reavaliação vencida" } as const;
   }

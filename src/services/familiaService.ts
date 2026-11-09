@@ -1,6 +1,50 @@
-import type { FamiliaDetalhe, FamiliaResumo, Membro, NovaFamilia, SituacaoEntrega } from "../types/familia";
-import { getJson, usarDadosDeExemplo } from "./api";
-import { entregaDoMesExemplo } from "./entregaService";
+import { enderecoEmTexto, type FamiliaDetalhe, type FamiliaResumo, type Membro, type NovaFamilia, type SituacaoEntrega } from "../types/familia";
+import { ErroApi, getJson, usarDadosDeExemplo } from "./api";
+import { buscarResumoDoMesDaApi, entregaDoMesExemplo, type ResumoDoMesDaApi } from "./entregaService";
+
+// ---------------------------------------------------------------------------
+// Formato da API .NET (FamilySummaryDto, sem dados sigilosos)
+
+type FamiliaDaApi = {
+  id: number;
+  code: string;
+  name: string;
+  phone: string;
+  deliveryClassName: string | null;
+  status: number; // 1 ativa, 2 inativa, 3 suspensa
+  membersCount: number;
+  authorizedMembers: { id: number; fullName: string; relationship: string }[];
+};
+
+function resumoDaApi(familia: FamiliaDaApi, mes: ResumoDoMesDaApi): FamiliaResumo {
+  const recebeu = mes.servedFamilies.find((servida) => servida.familyId === familia.id);
+  const situacao: SituacaoEntrega = familia.status !== 1 ? "suspensa" : recebeu ? "recebida" : "pendente";
+  return {
+    id: familia.id,
+    codigo: familia.code,
+    nomeResponsavel: familia.name,
+    telefone: familia.phone || undefined,
+    turma: familia.deliveryClassName ?? "Sem turma",
+    totalMembros: familia.membersCount,
+    situacao,
+    dataUltimaEntrega: recebeu?.deliveryDate,
+  };
+}
+
+// A API só devolve os membros autorizados a retirar, que são os que a entrega usa.
+function detalheDaApi(familia: FamiliaDaApi, mes: ResumoDoMesDaApi): FamiliaDetalhe {
+  return {
+    ...resumoDaApi(familia, mes),
+    membros: familia.authorizedMembers.map((membro) => ({
+      id: membro.id,
+      nome: membro.fullName,
+      parentesco: membro.relationship,
+      autorizadoRetirar: true,
+    })),
+  };
+}
+
+// ---------------------------------------------------------------------------
 
 // Dados de exemplo enquanto o endpoint de famílias não está pronto.
 // Quando a API existir, só a função buscarFamilias muda; a tela continua igual.
@@ -43,10 +87,13 @@ function situacaoExemplo(familia: FamiliaResumo): FamiliaResumo {
 }
 
 export async function buscarFamilias(termo: string): Promise<FamiliaResumo[]> {
-  // Caminho provisório: confirmar com o Thiago quando o endpoint existir.
-  // Com busca vazia, a API deve devolver todas as famílias ativas.
+  // Com busca vazia, a API devolve todas as famílias ativas.
   if (!usarDadosDeExemplo) {
-    return getJson<FamiliaResumo[]>(`/familias?busca=${encodeURIComponent(termo)}`);
+    const [familias, mes] = await Promise.all([
+      getJson<FamiliaDaApi[]>(`/family?term=${encodeURIComponent(termo.trim())}`),
+      buscarResumoDoMesDaApi(),
+    ]);
+    return familias.map((familia) => resumoDaApi(familia, mes));
   }
 
   // Atraso falso, só para conseguirmos ver o estado de carregamento na tela.
@@ -116,9 +163,14 @@ const DETALHES_EXEMPLO: Record<number, { dataReavaliacao: string; membros: Membr
 
 // Devolve null quando a família não existe.
 export async function buscarFamiliaPorId(id: number): Promise<FamiliaDetalhe | null> {
-  // Caminho provisório: confirmar com o Thiago quando o endpoint existir.
   if (!usarDadosDeExemplo) {
-    return getJson<FamiliaDetalhe>(`/familias/${id}`);
+    try {
+      const [familia, mes] = await Promise.all([getJson<FamiliaDaApi>(`/family/${id}`), buscarResumoDoMesDaApi()]);
+      return detalheDaApi(familia, mes);
+    } catch (falha) {
+      if (falha instanceof ErroApi && falha.status === 404) return null;
+      throw falha;
+    }
   }
 
   await new Promise((resolver) => setTimeout(resolver, 300));
@@ -149,7 +201,7 @@ export function adicionarFamiliaExemplo(nova: NovaFamilia): FamiliaDetalhe {
   };
   FAMILIAS_EXEMPLO.push(resumo);
   DETALHES_EXEMPLO[id] = detalhes;
-  return { ...resumo, ...detalhes, endereco: nova.endereco, observacoes: nova.observacoes };
+  return { ...resumo, ...detalhes, endereco: enderecoEmTexto(nova.endereco) };
 }
 
 // Cadastro de membro nos dados de exemplo: aparece na tela de entrega da família.
