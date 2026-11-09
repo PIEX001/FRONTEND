@@ -99,9 +99,15 @@ async function chamar<T>(caminho: string, opcoes: Opcoes = {}): Promise<T> {
   if (!resposta.ok) {
     throw new ErroApi(resposta.status, `Erro ${resposta.status} ao chamar ${caminho}`);
   }
-  // 204 e respostas vazias não têm JSON.
+  // 204 e respostas vazias não têm corpo. Várias rotas do back devolvem só um texto
+  // (ex.: "Senha alterada com sucesso"), sem JSON: nesse caso devolve o texto como está.
   const texto = await resposta.text();
-  return (texto ? JSON.parse(texto) : undefined) as T;
+  if (!texto) return undefined as T;
+  try {
+    return JSON.parse(texto) as T;
+  } catch {
+    return texto as T;
+  }
 }
 
 // Faz um GET na API e devolve o JSON. Dá erro se a resposta não for 2xx,
