@@ -1,8 +1,8 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Cartao } from "../../components/base/Cartao";
 import { Button } from "../../components/base/Button";
-import { ErroApi } from "../../services/api";
+import { acordarServidor, ErroApi, usarDadosDeExemplo } from "../../services/api";
 import { entrar as entrarNoSistema } from "../../services/autenticacao";
 import { lerUsuarioLogado } from "../../services/sessao";
 import { MENSAGENS } from "../../utils/mensagens";
@@ -14,6 +14,11 @@ export function Login() {
   const [entrando, setEntrando] = useState(false);
   const [parametros] = useSearchParams();
   const navegar = useNavigate();
+
+  // O servidor gratuito dorme sem uso: começa a acordar enquanto a pessoa digita.
+  useEffect(() => {
+    acordarServidor();
+  }, []);
 
   // Quem já está logado vai direto para a busca.
   if (lerUsuarioLogado()) {
@@ -33,8 +38,8 @@ export function Login() {
     setErro("");
     setEntrando(true);
     try {
-      await entrarNoSistema(login.trim().toLowerCase(), senha);
-      navegar("/busca-familia", { replace: true });
+      const { primeiroAcesso } = await entrarNoSistema(login.trim().toLowerCase(), senha);
+      navegar(primeiroAcesso ? "/trocar-senha" : "/busca-familia", { replace: true });
     } catch (falha) {
       const senhaErrada = falha instanceof ErroApi && falha.status === 401;
       setErro(senhaErrada ? MENSAGENS.login.erro : MENSAGENS.geral.semConexao);
@@ -51,12 +56,15 @@ export function Login() {
       <p className="subtitulo">Acesse o sistema de gestão da Casa São Francisco de Assis.</p>
       <Cartao>
         <form onSubmit={entrar} noValidate>
-          <label htmlFor="login">Usuário</label>
+          {/* Com a API o login é pelo e-mail; na demonstração, pelos usuários fictícios. */}
+          <label htmlFor="login">{usarDadosDeExemplo ? "Usuário" : "E-mail"}</label>
           <input
             id="login"
+            type={usarDadosDeExemplo ? "text" : "email"}
+            inputMode={usarDadosDeExemplo ? "text" : "email"}
             value={login}
             onChange={(e) => setLogin(e.target.value)}
-            placeholder="Ex.: maria"
+            placeholder={usarDadosDeExemplo ? "Ex.: maria" : "Ex.: maria@email.com"}
             autoComplete="username"
             autoCapitalize="none"
           />

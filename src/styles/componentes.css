@@ -781,6 +781,20 @@ select:focus {
   }
 }
 
+/* Faixa de servidor acordando (Render gratuito) */
+.faixa-servidor {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin: 0;
+  padding: 12px var(--spacing-md);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: center;
+}
+
 /* Faixa do modo de demonstração (VITE_API_URL vazio) */
 .faixa-demonstracao {
   margin: 0;
@@ -794,7 +808,33 @@ select:focus {
 }
 
 @media print {
+  .faixa-servidor,
   .faixa-demonstracao {
     display: none;
+  }
+}
+
+/* Formulários de cadastro com seções e campos lado a lado */
+.secao-form {
+  margin: var(--spacing-lg) 0 0;
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+  font-size: 17px;
+}
+
+.secao-form:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.campos-dupla {
+  display: grid;
+  gap: 0 var(--spacing-md);
+}
+
+@media (min-width: 560px) {
+  .campos-dupla {
+    grid-template-columns: 1fr 1fr;
   }
 }

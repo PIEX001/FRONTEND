@@ -6,6 +6,7 @@ import { BuscaFamilia } from "../pages/busca-familia/BuscaFamilia";
 import { Entrega } from "../pages/entrega/Entrega";
 import { Estoque } from "../pages/estoque/Estoque";
 import { Relatorios } from "../pages/relatorios/Relatorios";
+import { TrocarSenha } from "../pages/trocar-senha/TrocarSenha";
 import { RotaProtegida } from "./RotaProtegida";
 
 export function AppRoutes() {
@@ -14,6 +15,8 @@ export function AppRoutes() {
       {/* Quem não está logado cai no login pela RotaProtegida. */}
       <Route path="/" element={<Navigate to="/busca-familia" replace />} />
       <Route path="/login" element={<Login />} />
+      {/* Fora da RotaProtegida: é para onde ela manda quem ainda precisa trocar a senha. */}
+      <Route path="/trocar-senha" element={<TrocarSenha />} />
       <Route
         path="/busca-familia"
         element={

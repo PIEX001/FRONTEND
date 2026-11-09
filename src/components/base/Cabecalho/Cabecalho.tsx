@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { lerUsuarioLogado, sair } from "../../../services/sessao";
+import { sairDoSistema } from "../../../services/autenticacao";
+import { lerUsuarioLogado } from "../../../services/sessao";
 
 // Telas do menu. O operador só usa a entrega, então o menu aparece só para o administrador.
 const MENU_ADMINISTRADOR = [
@@ -17,8 +18,9 @@ export function Cabecalho() {
   const usuario = lerUsuarioLogado();
   const navegar = useNavigate();
 
-  function aoSair() {
-    sair();
+  // Encerra o token na API também, para ele não valer mais.
+  async function aoSair() {
+    await sairDoSistema();
     navegar("/login", { replace: true });
   }
 
