@@ -780,3 +780,21 @@ select:focus {
     max-width: 640px;
   }
 }
+
+/* Faixa do modo de demonstração (VITE_API_URL vazio) */
+.faixa-demonstracao {
+  margin: 0;
+  padding: 10px var(--spacing-md);
+  background: var(--color-alerta-bg);
+  color: var(--color-alerta);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+@media print {
+  .faixa-demonstracao {
+    display: none;
+  }
+}

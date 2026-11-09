@@ -1,19 +1,18 @@
 import { useState, type FormEvent } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Cartao } from "../../components/base/Cartao";
 import { Button } from "../../components/base/Button";
-import { lerUsuarioLogado, salvarUsuarioLogado, type UsuarioLogado } from "../../services/sessao";
+import { ErroApi } from "../../services/api";
+import { entrar as entrarNoSistema } from "../../services/autenticacao";
+import { lerUsuarioLogado } from "../../services/sessao";
 import { MENSAGENS } from "../../utils/mensagens";
-
-const usuariosFicticios: Array<UsuarioLogado & { senha: string }> = [
-  { nome: "Maria", login: "maria", senha: "123", perfil: "operador" },
-  { nome: "Administrador", login: "admin", senha: "admin", perfil: "administrador" },
-];
 
 export function Login() {
   const [login, setLogin] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
+  const [entrando, setEntrando] = useState(false);
+  const [parametros] = useSearchParams();
   const navegar = useNavigate();
 
   // Quem já está logado vai direto para a busca.
@@ -21,25 +20,29 @@ export function Login() {
     return <Navigate to="/busca-familia" replace />;
   }
 
-  function entrar(evento: FormEvent<HTMLFormElement>) {
+  // A API devolveu 401 no meio do uso e o sistema mandou para cá.
+  const sessaoExpirada = parametros.get("sessao") === "expirada";
+
+  async function entrar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     if (!login.trim() || !senha) {
       setErro(MENSAGENS.login.campoVazio);
       return;
     }
 
-    const usuario = usuariosFicticios.find(
-      (u) => u.login === login.trim().toLowerCase() && u.senha === senha,
-    );
-    if (!usuario) {
-      setErro(MENSAGENS.login.erro);
-      return;
+    setErro("");
+    setEntrando(true);
+    try {
+      await entrarNoSistema(login.trim().toLowerCase(), senha);
+      navegar("/busca-familia", { replace: true });
+    } catch (falha) {
+      const senhaErrada = falha instanceof ErroApi && falha.status === 401;
+      setErro(senhaErrada ? MENSAGENS.login.erro : MENSAGENS.geral.semConexao);
+      setEntrando(false);
     }
-
-    // A senha não vai para a sessão.
-    salvarUsuarioLogado({ nome: usuario.nome, login: usuario.login, perfil: usuario.perfil });
-    navegar("/busca-familia");
   }
+
+  const aviso = erro || (sessaoExpirada ? MENSAGENS.login.sessaoExpirada : "");
 
   return (
     <main className="conteudo conteudo--estreito login">
@@ -66,12 +69,17 @@ export function Login() {
             placeholder="Sua senha"
             autoComplete="current-password"
           />
-          {erro && (
+          {aviso && (
             <p className="aviso aviso--bloqueio campo-seguinte" role="alert">
-              {erro}
+              {aviso}
             </p>
           )}
-          <Button type="submit" label="Entrar" className="botao--formulario" />
+          <Button
+            type="submit"
+            label={entrando ? "Entrando..." : "Entrar"}
+            desabilitado={entrando}
+            className="botao--formulario"
+          />
         </form>
       </Cartao>
     </main>
