@@ -11,7 +11,8 @@ import { RotaProtegida } from "./RotaProtegida";
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      {/* Quem não está logado cai no login pela RotaProtegida. */}
+      <Route path="/" element={<Navigate to="/busca-familia" replace />} />
       <Route path="/login" element={<Login />} />
       <Route
         path="/busca-familia"
@@ -61,6 +62,8 @@ export function AppRoutes() {
           </RotaProtegida>
         }
       />
+      {/* Endereço que não existe volta para o início. */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

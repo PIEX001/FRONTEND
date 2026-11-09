@@ -13,10 +13,11 @@ export async function buscarResumoMes(): Promise<ResumoEntregasMes> {
   const hoje = new Date();
   const mes = String(hoje.getMonth() + 1).padStart(2, "0");
 
+  // As entregas feitas na tela somam no número do mês.
   return {
     mesReferencia: `${hoje.getFullYear()}-${mes}`,
     totalFamilias: 212,
-    familiasAtendidas: 143,
+    familiasAtendidas: 143 + registradasNaTela,
   };
 }
 
@@ -40,6 +41,21 @@ const ENTREGAS_EXEMPLO: EntregaRegistrada[] = [
   { id: 7, familiaId: 4, membroId: 42, funcionario: "Joana", dataHora: dataExemplo(1, 15, 15) },
   { id: 8, familiaId: 5, membroId: 51, funcionario: "Maria", dataHora: dataExemplo(1, 21, 9) },
 ];
+
+// Quantas entregas foram registradas na tela desde que a página abriu.
+let registradasNaTela = 0;
+
+// Compara mês e ano no fuso do aparelho, não em UTC.
+function ehDesteMes(iso: string) {
+  const data = new Date(iso);
+  const hoje = new Date();
+  return data.getFullYear() === hoje.getFullYear() && data.getMonth() === hoje.getMonth();
+}
+
+// Entrega da família no mês atual, se houver. Usada pela busca nos dados de exemplo.
+export function entregaDoMesExemplo(familiaId: number): EntregaRegistrada | undefined {
+  return ENTREGAS_EXEMPLO.find((entrega) => entrega.familiaId === familiaId && ehDesteMes(entrega.dataHora));
+}
 
 // Entregas da família, da mais recente para a mais antiga.
 export async function listarEntregasDaFamilia(familiaId: number): Promise<EntregaRegistrada[]> {
@@ -65,22 +81,16 @@ export async function registrarEntrega(nova: NovaEntrega): Promise<EntregaRegist
 
   await new Promise((resolver) => setTimeout(resolver, 500));
 
-  // Compara mês e ano no fuso do aparelho, não em UTC.
-  const agora = new Date();
-  const mesmoMes = (data: Date) =>
-    data.getFullYear() === agora.getFullYear() && data.getMonth() === agora.getMonth();
-  const jaRecebeu = ENTREGAS_EXEMPLO.some(
-    (entrega) => entrega.familiaId === nova.familiaId && mesmoMes(new Date(entrega.dataHora)),
-  );
-  if (jaRecebeu) {
+  if (entregaDoMesExemplo(nova.familiaId)) {
     throw new ErroApi(409, "Família já recebeu a cesta neste mês");
   }
 
   const registrada: EntregaRegistrada = {
     ...nova,
     id: Math.max(0, ...ENTREGAS_EXEMPLO.map((entrega) => entrega.id)) + 1,
-    dataHora: agora.toISOString(),
+    dataHora: new Date().toISOString(),
   };
   ENTREGAS_EXEMPLO.push(registrada);
+  registradasNaTela += 1;
   return registrada;
 }

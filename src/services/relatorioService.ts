@@ -42,7 +42,9 @@ function entregasExemplo(mesReferencia: string, indiceTurma: number, quantidade:
     const nome = `${NOMES[sorteio(n, NOMES.length)]} ${sobrenome}`;
     const ultimoDia = ehMesAtual ? hoje.getDate() : 27;
     const dia = 1 + ((n * 5) % ultimoDia);
-    const data = new Date(ano, mes - 1, dia, 8 + (n % 6), (n * 13) % 60);
+    let data = new Date(ano, mes - 1, dia, 8 + (n % 6), (n * 13) % 60);
+    // No mês atual, nada de entrega num horário que ainda não chegou.
+    if (data > hoje) data = new Date(hoje.getTime() - (n + 1) * 7 * 60 * 1000);
     return {
       id: n + 1,
       dataHora: data.toISOString(),

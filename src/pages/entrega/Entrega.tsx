@@ -9,14 +9,12 @@ import { Situacao } from "../../components/base/Situacao";
 import { ErroApi } from "../../services/api";
 import { listarEntregasDaFamilia, registrarEntrega } from "../../services/entregaService";
 import { buscarFamiliaPorId } from "../../services/familiaService";
+import { lerUsuarioLogado } from "../../services/sessao";
 import type { EntregaRegistrada } from "../../types/entrega";
 import type { FamiliaDetalhe } from "../../types/familia";
 import { EntregaBloqueada } from "./EntregaBloqueada";
 import { EntregaConfirmada } from "./EntregaConfirmada";
 import { dataCurta, ehDesteMes, mesAtualPorExtenso } from "./formatos";
-
-// Usuário fixo até o login existir.
-const USUARIO = "Maria";
 
 // "2027-03-01" vira "março de 2027".
 function mesPorExtenso(data: string) {
@@ -36,6 +34,9 @@ function hojeAAAAMMDD() {
 }
 
 export function Entrega() {
+  // Funcionário que registra a entrega: o usuário logado.
+  const funcionario = lerUsuarioLogado()?.nome ?? "";
+
   // A busca abre esta tela como /entrega?familia=ID
   const [parametros] = useSearchParams();
   const idFamilia = Number(parametros.get("familia"));
@@ -99,7 +100,7 @@ export function Entrega() {
       const entrega = await registrarEntrega({
         familiaId: familia.id,
         membroId,
-        funcionario: USUARIO,
+        funcionario,
       });
       setRegistrada(entrega);
     } catch (falha) {
@@ -112,7 +113,7 @@ export function Entrega() {
   if (familia && registrada) {
     return (
       <>
-        <Cabecalho usuario={USUARIO} cargo="operadora" />
+        <Cabecalho />
         <EntregaConfirmada familia={familia} entrega={registrada} />
       </>
     );
@@ -122,7 +123,7 @@ export function Entrega() {
   if (familia && entregas.some((entrega) => ehDesteMes(entrega.dataHora))) {
     return (
       <>
-        <Cabecalho usuario={USUARIO} cargo="operadora" />
+        <Cabecalho />
         <EntregaBloqueada familia={familia} entregas={entregas} />
       </>
     );
@@ -130,7 +131,7 @@ export function Entrega() {
 
   return (
     <>
-      <Cabecalho usuario={USUARIO} cargo="operadora" />
+      <Cabecalho />
 
       <main className="conteudo">
         <Link className="voltar" to="/busca-familia">
@@ -227,7 +228,7 @@ export function Entrega() {
                     <dt>Horário</dt>
                     <dd>{horaAgora}</dd>
                     <dt>Funcionário</dt>
-                    <dd>{USUARIO}</dd>
+                    <dd>{funcionario}</dd>
                   </dl>
                   <p className="nota">Preenchidos automaticamente.</p>
                 </Cartao>

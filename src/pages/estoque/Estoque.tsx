@@ -9,7 +9,7 @@ import { Situacao } from "../../components/base/Situacao";
 import { buscarResumoMes } from "../../services/entregaService";
 import { buscarSaldo, listarMovimentacoes } from "../../services/estoqueService";
 import type { Movimentacao, SaldoEstoque } from "../../types/estoque";
-import { lerUsuarioLogado } from "../login/Login";
+import { lerUsuarioLogado } from "../../services/sessao";
 import { dataHoraCurta, mesAtualPorExtenso } from "../entrega/formatos";
 import { FormularioMovimentacao } from "./FormularioMovimentacao";
 import "./Estoque.css";
@@ -70,7 +70,7 @@ export function Estoque() {
 
   return (
     <>
-      <Cabecalho usuario={nome} cargo="administrador" />
+      <Cabecalho />
 
       <main className="conteudo">
         <Link className="voltar" to="/busca-familia">

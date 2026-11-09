@@ -1,63 +1,113 @@
-import { useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Cartao } from "../../components/base/Cartao";
 import { Button } from "../../components/base/Button";
 import { Aviso } from "../../components/base/Aviso";
 import { Cabecalho } from "../../components/base/Cabecalho";
-import { lerUsuarioLogado } from "../login/Login";
+import { buscarFamilias } from "../../services/familiaService";
 import { cadastrarMembro } from "../../services/membros";
+import type { FamiliaResumo } from "../../types/familia";
 import { MENSAGENS } from "../../utils/mensagens";
 
 export function Membros() {
-  const usuario = lerUsuarioLogado();
+  // O cadastro de família abre esta tela como /membros?familia=ID
+  const [parametros] = useSearchParams();
+  const [familias, setFamilias] = useState<FamiliaResumo[]>([]);
+  const [familiaId, setFamiliaId] = useState(parametros.get("familia") ?? "");
   const [nome, setNome] = useState("");
   const [parentesco, setParentesco] = useState("");
   const [dataNascimento, setDataNascimento] = useState("");
   const [autorizadoRetirar, setAutorizadoRetirar] = useState(false);
-  const [sucesso, setSucesso] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [sucesso, setSucesso] = useState("");
   const [erro, setErro] = useState("");
 
-  async function salvar(evento?: React.FormEvent) {
-    evento?.preventDefault();
+  useEffect(() => {
+    // Com busca vazia vêm todas as famílias, em ordem alfabética no seletor.
+    buscarFamilias("")
+      .then((lista) => setFamilias([...lista].sort((a, b) => a.nomeResponsavel.localeCompare(b.nomeResponsavel))))
+      .catch(() => setFamilias([]));
+  }, []);
+
+  async function salvar(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    if (enviando) return;
+    if (!familiaId || !nome.trim() || !parentesco.trim()) {
+      setErro(MENSAGENS.membros.campoVazio);
+      return;
+    }
+
+    setEnviando(true);
+    setErro("");
+    setSucesso("");
     try {
-      await cadastrarMembro("1", { nome, parentesco, dataNascimento, autorizadoRetirar });
-      setSucesso(true);
-      setErro("");
+      await cadastrarMembro(Number(familiaId), {
+        nome: nome.trim(),
+        parentesco: parentesco.trim(),
+        dataNascimento: dataNascimento || undefined,
+        autorizadoRetirar,
+      });
+      const familia = familias.find((item) => String(item.id) === familiaId);
+      setSucesso(`${nome.trim()} entrou na família de ${familia?.nomeResponsavel ?? "código " + familiaId}.`);
+      // A família continua escolhida para cadastrar o próximo membro.
       setNome("");
       setParentesco("");
       setDataNascimento("");
       setAutorizadoRetirar(false);
     } catch {
       setErro(MENSAGENS.membros.erro);
+    } finally {
+      setEnviando(false);
     }
   }
 
   return (
     <>
-      <Cabecalho usuario={usuario?.nome ?? "Usuário"} cargo={usuario?.perfil ?? ""} />
-      <main className="conteudo">
+      <Cabecalho />
+      <main className="conteudo conteudo--estreito">
         <h1>Cadastro de membros</h1>
+        <p className="subtitulo">Campos com * são obrigatórios.</p>
+
         {sucesso && (
-          <Aviso variante="ok" titulo="Membro cadastrado">
-            {MENSAGENS.membros.sucesso}
+          <Aviso variante="ok" titulo={MENSAGENS.membros.sucesso}>
+            <p className="aviso__texto">{sucesso}</p>
           </Aviso>
         )}
         {erro && (
           <Aviso variante="bloqueio" titulo="Não foi possível salvar">
-            {MENSAGENS.membros.erro}
+            <p className="aviso__texto">{erro}</p>
           </Aviso>
         )}
+
         <Cartao>
-          <form onSubmit={salvar}>
-            <label htmlFor="nome-membro">Nome</label>
-            <input id="nome-membro" value={nome}
-              onChange={(e) => setNome(e.target.value)} required />
-            <label htmlFor="parentesco" style={{ marginTop: 14 }}>Parentesco</label>
-            <input id="parentesco" value={parentesco}
-              onChange={(e) => setParentesco(e.target.value)} required />
-            <label htmlFor="nascimento" style={{ marginTop: 14 }}>Data de nascimento</label>
-            <input id="nascimento" type="date" value={dataNascimento}
-              onChange={(e) => setDataNascimento(e.target.value)} />
-            <label style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 8 }}>
+          <form onSubmit={salvar} noValidate>
+            <label htmlFor="familia">Família *</label>
+            <select id="familia" value={familiaId} onChange={(e) => setFamiliaId(e.target.value)}>
+              <option value="">Escolha a família</option>
+              {familias.map((familia) => (
+                <option key={familia.id} value={familia.id}>
+                  {familia.nomeResponsavel} (Cód. {familia.codigo})
+                </option>
+              ))}
+            </select>
+            <label htmlFor="nome-membro" className="campo-seguinte">Nome *</label>
+            <input id="nome-membro" value={nome} onChange={(e) => setNome(e.target.value)} autoComplete="off" />
+            <label htmlFor="parentesco" className="campo-seguinte">Parentesco *</label>
+            <input
+              id="parentesco"
+              value={parentesco}
+              onChange={(e) => setParentesco(e.target.value)}
+              placeholder="Ex.: Filho, Esposa, Neta"
+              autoComplete="off"
+            />
+            <label htmlFor="nascimento" className="campo-seguinte">Data de nascimento</label>
+            <input
+              id="nascimento"
+              type="date"
+              value={dataNascimento}
+              onChange={(e) => setDataNascimento(e.target.value)}
+            />
+            <label className="campo-seguinte campo-marcar">
               <input
                 type="checkbox"
                 checked={autorizadoRetirar}
@@ -65,7 +115,12 @@ export function Membros() {
               />
               Autorizado a retirar cestas
             </label>
-            <Button label="Salvar membro" />
+            <Button
+              type="submit"
+              label={enviando ? "Salvando..." : "Salvar membro"}
+              desabilitado={enviando}
+              className="botao--formulario"
+            />
           </form>
         </Cartao>
       </main>
