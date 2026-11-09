@@ -2,6 +2,7 @@ export const MENSAGENS = {
   login: {
     erro: "Usuário ou senha inválidos. Verifique os dados e tente novamente.",
     campoVazio: "Preencha todos os campos para continuar.",
+    sessaoExpirada: "Sua sessão terminou. Entre de novo para continuar.",
   },
   familia: {
     sucesso: "Família cadastrada com sucesso.",
